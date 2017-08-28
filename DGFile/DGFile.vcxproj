@@ -1,0 +1,124 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{A415C11C-B676-4896-94D1-810E036E961C}</ProjectGuid>
+    <Keyword>MakeFileProj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeBuildCommandLine>..\DriverCompile\MyCompile.bat $(Configuration) $(Platform) $(ProjectDir) $(SolutionDir) $(TargetName)</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>..\DriverCompile\MyRecompile.bat $(Configuration) $(Platform) $(ProjectDir) $(SolutionDir) $(ProjectDir) $(SolutionDir) $(TargetName)</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>..\DriverCompile\MyCleanup.bat $(Configuration) $(Platform) $(ProjectDir) $(SolutionDir) $(ProjectDir)</NMakeCleanCommandLine>
+    <IncludePath>C:\WinDDK\7600.16385.1\inc\wdf\umdf\1.9;C:\WinDDK\7600.16385.1\inc\wdf\kmdf\1.9;C:\WinDDK\7600.16385.1\inc\mfc42;C:\WinDDK\7600.16385.1\inc\ddk;C:\WinDDK\7600.16385.1\inc\crt;C:\WinDDK\7600.16385.1\inc\atl71;C:\WinDDK\7600.16385.1\inc\api</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <NMakePreprocessorDefinitions>_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeBuildCommandLine>..\DriverCompile\MyCompile.bat $(Configuration) $(Platform) $(ProjectDir) $(SolutionDir) $(TargetName)</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>..\DriverCompile\MyRecompile.bat $(Configuration) $(Platform) $(ProjectDir) $(SolutionDir) $(ProjectDir) $(SolutionDir) $(TargetName)</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>..\DriverCompile\MyCleanup.bat $(Configuration) $(Platform) $(ProjectDir) $(SolutionDir) $(ProjectDir)</NMakeCleanCommandLine>
+    <IncludePath>C:\WinDDK\7600.16385.1\inc\wdf\umdf\1.9;C:\WinDDK\7600.16385.1\inc\wdf\kmdf\1.9;C:\WinDDK\7600.16385.1\inc\mfc42;C:\WinDDK\7600.16385.1\inc\ddk;C:\WinDDK\7600.16385.1\inc\crt;C:\WinDDK\7600.16385.1\inc\atl71;C:\WinDDK\7600.16385.1\inc\api</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <NMakePreprocessorDefinitions>WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeBuildCommandLine>..\DriverCompile\MyCompile.bat $(Configuration) $(Platform) $(ProjectDir) $(SolutionDir) $(TargetName)</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>..\DriverCompile\MyRecompile.bat $(Configuration) $(Platform) $(ProjectDir) $(SolutionDir) $(ProjectDir) $(SolutionDir) $(TargetName)</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>..\DriverCompile\MyCleanup.bat $(Configuration) $(Platform) $(ProjectDir) $(SolutionDir) $(ProjectDir)</NMakeCleanCommandLine>
+    <IncludePath>C:\WinDDK\7600.16385.1\inc\wdf\umdf\1.9;C:\WinDDK\7600.16385.1\inc\wdf\kmdf\1.9;C:\WinDDK\7600.16385.1\inc\mfc42;C:\WinDDK\7600.16385.1\inc\ddk;C:\WinDDK\7600.16385.1\inc\crt;C:\WinDDK\7600.16385.1\inc\atl71;C:\WinDDK\7600.16385.1\inc\api</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <NMakePreprocessorDefinitions>NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeBuildCommandLine>..\DriverCompile\MyCompile.bat $(Configuration) $(Platform) $(ProjectDir) $(SolutionDir) $(TargetName)</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>..\DriverCompile\MyRecompile.bat $(Configuration) $(Platform) $(ProjectDir) $(SolutionDir) $(ProjectDir) $(SolutionDir) $(TargetName)</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>..\DriverCompile\MyCleanup.bat $(Configuration) $(Platform) $(ProjectDir) $(SolutionDir) $(ProjectDir)</NMakeCleanCommandLine>
+    <IncludePath>C:\WinDDK\7600.16385.1\inc\wdf\umdf\1.9;C:\WinDDK\7600.16385.1\inc\wdf\kmdf\1.9;C:\WinDDK\7600.16385.1\inc\mfc42;C:\WinDDK\7600.16385.1\inc\ddk;C:\WinDDK\7600.16385.1\inc\crt;C:\WinDDK\7600.16385.1\inc\atl71;C:\WinDDK\7600.16385.1\inc\api</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <Text Include="readme.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="DGFile.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="makefile" />
+    <None Include="sources" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Communication.cpp" />
+    <ClCompile Include="DGFile.cpp" />
+    <ClCompile Include="KrnlStr.cpp" />
+    <ClCompile Include="Log.cpp" />
+    <ClCompile Include="Public.cpp" />
+    <ClCompile Include="Stdafx.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Communication.h" />
+    <ClInclude Include="DGFile.h" />
+    <ClInclude Include="KrnlStr.h" />
+    <ClInclude Include="Log.h" />
+    <ClInclude Include="Public.h" />
+    <ClInclude Include="Stdafx.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
