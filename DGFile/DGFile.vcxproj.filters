@@ -48,6 +48,9 @@
     <ClCompile Include="FileName.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Create.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DGFile.h">
@@ -69,6 +72,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="FileName.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Create.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="PublicStruct.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

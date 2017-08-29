@@ -206,7 +206,7 @@ DriverEntry(
 		// 		DriverObject->MajorFunction[IRP_MJ_CLEANUP] = DokanBuildRequest;
 		// 
 		// 		DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = DokanBuildRequest;
-		// 		DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = DokanBuildRequest;
+		pDriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = CDGFile::Dispatch;
 		// 		DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] = DokanBuildRequest;
 		// 
 		// 		DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = DokanBuildRequest;
@@ -371,10 +371,29 @@ CDGFile::DriverUnload(
 
 FSD_IDENTIFIER_TYPE
 CDGFile::GetFsdIdentifierType(
-	__in LPDGFILE_GLOBAL lpDgfileGlobal
+	__in LPFSD_IDENTIFIER lpFsdIdentifier
 )
 {
-	return (lpDgfileGlobal ? lpDgfileGlobal->Identifier.Type : (FSD_IDENTIFIER_TYPE)0);
+
+	FSD_IDENTIFIER_TYPE FsdIdentifierType = (FSD_IDENTIFIER_TYPE)0;
+
+
+	__try
+	{
+		if (!lpFsdIdentifier)
+		{
+			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEED, L"input argument error.");
+			__leave;
+		}
+
+		FsdIdentifierType = lpFsdIdentifier->Type;
+	}
+	__finally
+	{
+		;
+	}
+
+	return FsdIdentifierType;
 }
 
 VOID
@@ -569,5 +588,192 @@ CDGFile::InitList(
 		}
 	}
 
+	return bRet;
+}
+
+NTSTATUS
+CDGFile::Dispatch(
+	__in PDEVICE_OBJECT pDeviceObject,
+	__in PIRP			pIrp
+)
+{
+	NTSTATUS			ntStatus = STATUS_UNSUCCESSFUL;
+
+	BOOLEAN				bFsRtlEnterFileSystem = FALSE;
+	PIRP				pTopLevelIrpOrg = NULL;
+	PIO_STACK_LOCATION	pIoStackLocation = NULL;
+
+	__try
+	{
+		if (APC_LEVEL >= KeGetCurrentIrql())
+		{
+			FsRtlEnterFileSystem();
+			bFsRtlEnterFileSystem = TRUE;
+		}
+
+		pTopLevelIrpOrg = IoGetTopLevelIrp();
+		if (!pTopLevelIrpOrg)
+			IoSetTopLevelIrp(pIrp);
+
+		pIoStackLocation = IoGetCurrentIrpStackLocation(pIrp);
+		if (!pIoStackLocation)
+		{
+			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEED, L"IoGetCurrentIrpStackLocation failed.");
+			__leave;
+		}
+		if (IsDeviceReadOnly(pDeviceObject))
+		{
+			if ((IRP_MJ_WRITE == pIoStackLocation->MajorFunction) ||
+				(IRP_MJ_SET_INFORMATION == pIoStackLocation->MajorFunction) ||
+				(IRP_MJ_SET_EA == pIoStackLocation->MajorFunction) ||
+				(IRP_MJ_FLUSH_BUFFERS == pIoStackLocation->MajorFunction) ||
+				(IRP_MJ_SET_SECURITY == pIoStackLocation->MajorFunction) ||
+				(IRP_MJ_SET_VOLUME_INFORMATION == pIoStackLocation->MajorFunction) ||
+				(IRP_MJ_FILE_SYSTEM_CONTROL == pIoStackLocation->MajorFunction &&
+					IRP_MN_USER_FS_REQUEST == pIoStackLocation->MinorFunction &&
+					FSCTL_MARK_VOLUME_DIRTY == pIoStackLocation->Parameters.FileSystemControl.FsControlCode))
+			{
+				ntStatus = STATUS_MEDIA_WRITE_PROTECTED;
+				__leave;
+			}
+		}
+
+		switch (pIoStackLocation->MajorFunction)
+		{
+		case IRP_MJ_CREATE:
+		{
+			ntStatus = Create(pDeviceObject, pIrp);
+			break;
+		}
+		case IRP_MJ_CLOSE:
+		{
+			ntStatus = Close(pDeviceObject, pIrp);
+			break;
+		}
+		case IRP_MJ_READ:
+		{
+			ntStatus = Read(pDeviceObject, pIrp);
+			break;
+		}
+		case IRP_MJ_WRITE:
+		{
+			ntStatus = Write(pDeviceObject, pIrp);
+			break;
+		}
+		case IRP_MJ_FLUSH_BUFFERS:
+		{
+			ntStatus = FlushBuffers(pDeviceObject, pIrp);
+			break;
+		}
+		case IRP_MJ_QUERY_INFORMATION:
+		{
+			ntStatus = QueryInformation(pDeviceObject, pIrp);
+			break;
+		}
+		case IRP_MJ_SET_INFORMATION:
+		{
+			ntStatus = SetInformation(pDeviceObject, pIrp);
+			break;
+		}
+		case IRP_MJ_QUERY_VOLUME_INFORMATION:
+		{
+			ntStatus = QueryVolumeInformation(pDeviceObject, pIrp);
+			break;
+		}
+		case IRP_MJ_SET_VOLUME_INFORMATION:
+		{
+			ntStatus = SetVolumeInformation(pDeviceObject, pIrp);
+			break;
+		}
+		case IRP_MJ_DIRECTORY_CONTROL:
+		{
+			ntStatus = DirectoryControl(pDeviceObject, pIrp);
+			break;
+		}
+		case IRP_MJ_FILE_SYSTEM_CONTROL:
+		{
+			ntStatus = FileSystemControl(pDeviceObject, pIrp);
+			break;
+		}
+		case IRP_MJ_DEVICE_CONTROL:
+		{
+			ntStatus = DeviceControl(pDeviceObject, pIrp);
+			break;
+		}
+		case IRP_MJ_LOCK_CONTROL:
+		{
+			ntStatus = LockControl(pDeviceObject, pIrp);
+			break;
+		}
+		case IRP_MJ_CLEANUP:
+		{
+			ntStatus = Cleanup(pDeviceObject, pIrp);
+			break;
+		}
+		case IRP_MJ_SHUTDOWN:
+		{
+			ntStatus = Shutdown(pDeviceObject, pIrp);
+			break;
+		}
+		case IRP_MJ_QUERY_SECURITY:
+		{
+			ntStatus = QuerySecurity(pDeviceObject, pIrp);
+			break;
+		}
+		case IRP_MJ_SET_SECURITY:
+		{
+			ntStatus = SetSecurity(pDeviceObject, pIrp);
+			break;
+		}
+		case IRP_MJ_PNP:
+		{
+			ntStatus = Pnp(pDeviceObject, pIrp);
+			break;
+		}
+		default:
+		{
+			DokanCompleteIrpRequest(pIrp, STATUS_DRIVER_INTERNAL_ERROR, 0);
+
+			ntStatus = STATUS_DRIVER_INTERNAL_ERROR;
+			break;
+		}
+		}
+	}
+	__finally
+	{
+		if (!pTopLevelIrpOrg)
+			IoSetTopLevelIrp(pTopLevelIrpOrg);
+
+		if (bFsRtlEnterFileSystem && APC_LEVEL >= KeGetCurrentIrql())
+			FsRtlExitFileSystem();
+	}
+
+	return ntStatus;
+}
+
+
+BOOLEAN
+CDGFile::IsDeviceReadOnly(
+	__in PDEVICE_OBJECT pDeviceObject
+)
+{
+	BOOLEAN bRet = FALSE;
+
+
+	__try
+	{
+		if (!pDeviceObject)
+		{
+			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEED, L"input argument error.");
+			__leave;
+		}
+
+		bRet = FlagOn(pDeviceObject->Characteristics, FILE_READ_ONLY_DEVICE);
+	}
+	__finally
+	{
+		;
+	}
+	
 	return bRet;
 }

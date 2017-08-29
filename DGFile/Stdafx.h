@@ -16,8 +16,10 @@
 #include <Ntstrsafe.h>
 
 #include "Public.h"
+#include "PublicStruct.h"
 #include "KrnlStr.h"
 #include "FileName.h"
 #include "File.h"
 #include "Log.h"
+#include "Create.h"
 #include "DGFile.h"

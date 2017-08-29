@@ -103,6 +103,7 @@
     <None Include="sources" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Create.cpp" />
     <ClCompile Include="DGFile.cpp" />
     <ClCompile Include="File.cpp" />
     <ClCompile Include="FileName.cpp" />
@@ -112,12 +113,14 @@
     <ClCompile Include="Stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Create.h" />
     <ClInclude Include="DGFile.h" />
     <ClInclude Include="File.h" />
     <ClInclude Include="FileName.h" />
     <ClInclude Include="KrnlStr.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="Public.h" />
+    <ClInclude Include="PublicStruct.h" />
     <ClInclude Include="Stdafx.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

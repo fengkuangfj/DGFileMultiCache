@@ -13,5 +13,6 @@ SOURCES=Stdafx.cpp \
 		FileName.cpp \
 		File.cpp \
 		Log.cpp \
+		Create.cpp \
 		DGFile.cpp \
         DGFile.rc

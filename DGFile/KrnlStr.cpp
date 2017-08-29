@@ -179,7 +179,7 @@ CKrnlStr::Set(
 
 		m_Str.Length = usLenBNew;
 
-		RtlCopyMemory(m_Str.Buffer, pWchStr, m_Str.Length);
+		RtlMoveMemory(m_Str.Buffer, pWchStr, m_Str.Length);
 
 		m_Str.Buffer[usLenChNew] = UNICODE_NULL;
 
@@ -560,11 +560,11 @@ CKrnlStr::Append(
 			}
 
 			m_Str.Length = usLenBPre;
-			RtlCopyMemory(m_Str.Buffer, StrTemp.GetString(), m_Str.Length);
+			RtlMoveMemory(m_Str.Buffer, StrTemp.GetString(), m_Str.Length);
 		}
 
 		m_Str.Length = usLenBNew;
-		RtlCopyMemory(m_Str.Buffer + usLenBPre / sizeof(WCHAR), pWchStr, usLenBPost);
+		RtlMoveMemory(m_Str.Buffer + usLenBPre / sizeof(WCHAR), pWchStr, usLenBPost);
 
 		bRet = TRUE;
 	}
@@ -688,7 +688,7 @@ CKrnlStr::Lengthen(
 			}
 
 			if (StrTemp.GetLenB())
-				RtlCopyMemory(m_Str.Buffer, StrTemp.GetString(), StrTemp.GetLenB());
+				RtlMoveMemory(m_Str.Buffer, StrTemp.GetString(), StrTemp.GetLenB());
 
 			m_Str.Length = usLenB;
 		}
