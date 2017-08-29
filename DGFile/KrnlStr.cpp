@@ -29,7 +29,7 @@ CKrnlStr::~CKrnlStr()
 
 BOOLEAN
 CKrnlStr::Alloc(
-__in USHORT usLenCh
+	__in USHORT usLenCh
 )
 {
 	BOOLEAN bRet = FALSE;
@@ -81,7 +81,7 @@ CKrnlStr::Free()
 
 BOOLEAN
 CKrnlStr::Set(
-__in CKrnlStr * pCKrnlStr
+	__in CKrnlStr * pCKrnlStr
 )
 {
 	BOOLEAN bRet = FALSE;
@@ -142,8 +142,8 @@ CKrnlStr::ToUpper()
 
 BOOLEAN
 CKrnlStr::Set(
-__in PWCHAR pWchStr,
-__in USHORT usLenCh
+	__in PWCHAR pWchStr,
+	__in USHORT usLenCh
 )
 {
 	BOOLEAN	bRet = FALSE;
@@ -195,8 +195,8 @@ __in USHORT usLenCh
 
 BOOLEAN
 CKrnlStr::Set(
-__in PCHAR	pChStr,
-__in USHORT usLenCh
+	__in PCHAR	pChStr,
+	__in USHORT usLenCh
 )
 {
 	BOOLEAN		bRet = FALSE;
@@ -249,7 +249,7 @@ __in USHORT usLenCh
 
 BOOLEAN
 CKrnlStr::Set(
-__in PUNICODE_STRING pUnicodeStr
+	__in PUNICODE_STRING pUnicodeStr
 )
 {
 	BOOLEAN bRet = FALSE;
@@ -313,8 +313,8 @@ CKrnlStr::Get()
 
 BOOLEAN
 CKrnlStr::Equal(
-__in CKrnlStr *	pCKrnlStr,
-__in BOOLEAN	bIgnoreCase
+	__in CKrnlStr *	pCKrnlStr,
+	__in BOOLEAN	bIgnoreCase
 )
 {
 	BOOLEAN	bRet = FALSE;
@@ -340,9 +340,9 @@ __in BOOLEAN	bIgnoreCase
 
 BOOLEAN
 CKrnlStr::Equal(
-__in PWCHAR		pWchStr,
-__in USHORT		usLenCh,
-__in BOOLEAN	bIgnoreCase
+	__in PWCHAR		pWchStr,
+	__in USHORT		usLenCh,
+	__in BOOLEAN	bIgnoreCase
 )
 {
 	BOOLEAN	bRet = FALSE;
@@ -372,7 +372,7 @@ __in BOOLEAN	bIgnoreCase
 			usLenCh,
 			usLenCh,
 			bIgnoreCase
-			);
+		);
 	}
 	__finally
 	{
@@ -384,9 +384,9 @@ __in BOOLEAN	bIgnoreCase
 
 BOOLEAN
 CKrnlStr::Equal(
-__in PCHAR		pChStr,
-__in USHORT		usLenCh,
-__in BOOLEAN	bIgnoreCase
+	__in PCHAR		pChStr,
+	__in USHORT		usLenCh,
+	__in BOOLEAN	bIgnoreCase
 )
 {
 	BOOLEAN		bRet = FALSE;
@@ -422,8 +422,8 @@ __in BOOLEAN	bIgnoreCase
 
 BOOLEAN
 CKrnlStr::Equal(
-__in PUNICODE_STRING	pUnicodeStr,
-__in BOOLEAN			bIgnoreCase
+	__in PUNICODE_STRING	pUnicodeStr,
+	__in BOOLEAN			bIgnoreCase
 )
 {
 	BOOLEAN	bRet = FALSE;
@@ -449,7 +449,7 @@ __in BOOLEAN			bIgnoreCase
 
 BOOLEAN
 CKrnlStr::Append(
-__in CKrnlStr * pCKrnlStr
+	__in CKrnlStr * pCKrnlStr
 )
 {
 	BOOLEAN	bRet = FALSE;
@@ -475,8 +475,8 @@ __in CKrnlStr * pCKrnlStr
 
 BOOLEAN
 CKrnlStr::Append(
-__in PCHAR	pChStr,
-__in USHORT	usLenCh
+	__in PCHAR	pChStr,
+	__in USHORT	usLenCh
 )
 {
 	BOOLEAN		bRet = FALSE;
@@ -512,8 +512,8 @@ __in USHORT	usLenCh
 
 BOOLEAN
 CKrnlStr::Append(
-__in PWCHAR pWchStr,
-__in USHORT	usLenCh
+	__in PWCHAR pWchStr,
+	__in USHORT	usLenCh
 )
 {
 	BOOLEAN		bRet = FALSE;
@@ -578,7 +578,7 @@ __in USHORT	usLenCh
 
 BOOLEAN
 CKrnlStr::Append(
-__in PUNICODE_STRING pUnicodeStr
+	__in PUNICODE_STRING pUnicodeStr
 )
 {
 	BOOLEAN	 bRet = FALSE;
@@ -604,7 +604,7 @@ __in PUNICODE_STRING pUnicodeStr
 
 BOOLEAN
 CKrnlStr::Shorten(
-__in USHORT usLenCh
+	__in USHORT usLenCh
 )
 {
 	BOOLEAN bRet = FALSE;
@@ -646,7 +646,7 @@ __in USHORT usLenCh
 
 BOOLEAN
 CKrnlStr::Lengthen(
-__in USHORT usLenCh
+	__in USHORT usLenCh
 )
 {
 	BOOLEAN		bRet = FALSE;
@@ -767,12 +767,12 @@ CKrnlStr::Init()
 
 BOOLEAN
 CKrnlStr::WcharStrEqual(
-__in PWCHAR		pWchPosition1,
-__in USHORT		usLenCh1,
-__in PWCHAR		pWchPosition2,
-__in USHORT		usLenCh2,
-__in USHORT		usLenChCmp,
-__in BOOLEAN	bIgnoreCase
+	__in PWCHAR		pWchPosition1,
+	__in USHORT		usLenCh1,
+	__in PWCHAR		pWchPosition2,
+	__in USHORT		usLenCh2,
+	__in USHORT		usLenChCmp,
+	__in BOOLEAN	bIgnoreCase
 )
 {
 	BOOLEAN	bRet = FALSE;
@@ -847,9 +847,9 @@ __in BOOLEAN	bIgnoreCase
 
 PWCHAR
 CKrnlStr::SearchCharacter(
-__in WCHAR	wch,
-__in PWCHAR	pWchBegin,
-__in PWCHAR	pWchEnd
+	__in WCHAR	wch,
+	__in PWCHAR	pWchBegin,
+	__in PWCHAR	pWchEnd
 )
 {
 	PWCHAR	pRet = NULL;
@@ -900,8 +900,8 @@ __in PWCHAR	pWchEnd
 
 PWCHAR
 CKrnlStr::Search(
-__in PWCHAR		pDes,
-__in BOOLEAN	bIgnoreCase
+	__in PWCHAR		pDes,
+	__in BOOLEAN	bIgnoreCase
 )
 {
 	PWCHAR		pRet = NULL;

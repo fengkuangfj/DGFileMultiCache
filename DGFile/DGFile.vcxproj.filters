@@ -42,7 +42,10 @@
     <ClCompile Include="Public.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Communication.cpp">
+    <ClCompile Include="File.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="FileName.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -62,7 +65,10 @@
     <ClInclude Include="Public.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Communication.h">
+    <ClInclude Include="File.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="FileName.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

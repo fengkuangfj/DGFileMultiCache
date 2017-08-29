@@ -33,9 +33,9 @@ CopyRight (C) 2017 - 2017 杭州华途软件有限公司
 PVOID
 __cdecl operator
 new(
-size_t	size,
-ULONG	ulPoolTag
-)
+	size_t	size,
+	ULONG	ulPoolTag
+	)
 {
 	PVOID lpPointer = NULL;
 
@@ -80,8 +80,8 @@ ULONG	ulPoolTag
 VOID
 __cdecl operator
 delete(
-PVOID lpPointer
-)
+	PVOID lpPointer
+	)
 {
 	if (lpPointer)
 	{
@@ -105,8 +105,8 @@ PVOID lpPointer
 VOID
 __cdecl operator
 delete[](
-PVOID lpPointer
-)
+	PVOID lpPointer
+	)
 {
 	if (lpPointer)
 	{
@@ -117,12 +117,12 @@ PVOID lpPointer
 
 VOID
 PrintKrnl(
-__in							LOG_PRINTF_LEVEL	PrintfLevel,
-__in							LOG_RECORED_LEVEL	RecoredLevel,
-__in							PCHAR				pFuncName,
-__in							ULONG				ulLine,
-__in __drv_formatString(printf)	PWCHAR				Fmt,
-...
+	__in							LOG_PRINTF_LEVEL	PrintfLevel,
+	__in							LOG_RECORED_LEVEL	RecoredLevel,
+	__in							PCHAR				pFuncName,
+	__in							ULONG				ulLine,
+	__in __drv_formatString(printf)	PWCHAR				Fmt,
+	...
 )
 {
 	LARGE_INTEGER	snow = { 0 };
@@ -171,7 +171,7 @@ __in __drv_formatString(printf)	PWCHAR				Fmt,
 			nowFields.Minute,
 			nowFields.Second,
 			nowFields.Milliseconds
-			);
+		);
 		if (!NT_SUCCESS(ntStatus))
 			RtlCopyMemory(Time, L"[Date Error][Time Error]", wcslen(L"[Date Error][Time Error]") * sizeof(WCHAR));
 
@@ -195,7 +195,7 @@ __in __drv_formatString(printf)	PWCHAR				Fmt,
 					&ustrProcName,
 					&astrProcName,
 					TRUE
-					);
+				);
 			} while (STATUS_NO_MEMORY == ntStatus);
 
 			if (!NT_SUCCESS(ntStatus))
@@ -240,31 +240,31 @@ __in __drv_formatString(printf)	PWCHAR				Fmt,
 		ntStatus = RtlStringCchVPrintfW(pContent, MAX_PATH * 4, Fmt, Args);
 		if (NT_SUCCESS(ntStatus))
 			ntStatus = RtlStringCchPrintfW(
-			pLogInfo,
-			MAX_PATH * 4,
-			L"[%lS]%lS[%05d][%05d][%lS][%hs][%d]%lS",
-			wchPrintfLevel,
-			Time,
-			ulOwningPid,
-			ulTid,
-			wchProcName,
-			pFuncName,
-			ulLine,
-			pContent
+				pLogInfo,
+				MAX_PATH * 4,
+				L"[%lS]%lS[%05d][%05d][%lS][%hs][%d]%lS",
+				wchPrintfLevel,
+				Time,
+				ulOwningPid,
+				ulTid,
+				wchProcName,
+				pFuncName,
+				ulLine,
+				pContent
 			);
 		else
 			ntStatus = RtlStringCchPrintfW(
-			pLogInfo,
-			MAX_PATH * 4,
-			L"[%lS]%lS[%05d][%05d][%lS][%hs][%d]%x",
-			wchPrintfLevel,
-			Time,
-			ulOwningPid,
-			ulTid,
-			wchProcName,
-			pFuncName,
-			ulLine,
-			ntStatus
+				pLogInfo,
+				MAX_PATH * 4,
+				L"[%lS]%lS[%05d][%05d][%lS][%hs][%d]%x",
+				wchPrintfLevel,
+				Time,
+				ulOwningPid,
+				ulTid,
+				wchProcName,
+				pFuncName,
+				ulLine,
+				ntStatus
 			);
 
 		if (!NT_SUCCESS(ntStatus))
@@ -274,7 +274,7 @@ __in __drv_formatString(printf)	PWCHAR				Fmt,
 				MAX_PATH * 4,
 				L"RtlStringCchPrintfW failed 1. (%x)",
 				ntStatus
-				);
+			);
 			if (!NT_SUCCESS(ntStatus))
 			{
 				ntStatus = DbgPrintEx(
@@ -282,13 +282,13 @@ __in __drv_formatString(printf)	PWCHAR				Fmt,
 					DPFLTR_ERROR_LEVEL,
 					"RtlStringCchPrintfW failed 2. (%x) \n",
 					ntStatus
-					);
+				);
 				if (!NT_SUCCESS(ntStatus))
 					DbgPrintEx(
-					DPFLTR_IHVDRIVER_ID,
-					DPFLTR_ERROR_LEVEL,
-					"DbgPrintEx failed 1. (%x) \n",
-					ntStatus
+						DPFLTR_IHVDRIVER_ID,
+						DPFLTR_ERROR_LEVEL,
+						"DbgPrintEx failed 1. (%x) \n",
+						ntStatus
 					);
 
 				__leave;
@@ -303,13 +303,13 @@ __in __drv_formatString(printf)	PWCHAR				Fmt,
 			DPFLTR_ERROR_LEVEL,
 			"\n%lS\n",
 			pLogInfo
-			);
+		);
 		if (!NT_SUCCESS(ntStatus))
 			DbgPrintEx(
-			DPFLTR_IHVDRIVER_ID,
-			DPFLTR_ERROR_LEVEL,
-			"DbgPrintEx failed 2. (%x) \n",
-			ntStatus
+				DPFLTR_IHVDRIVER_ID,
+				DPFLTR_ERROR_LEVEL,
+				"DbgPrintEx failed 2. (%x) \n",
+				ntStatus
 			);
 	}
 	__finally
@@ -337,7 +337,7 @@ __in __drv_formatString(printf)	PWCHAR				Fmt,
 
 VOID
 Sleep(
-__in LONGLONG llTimeMilliseconds
+	__in LONGLONG llTimeMilliseconds
 )
 {
 	LARGE_INTEGER liOneHundredNanoseconds = { 0 };

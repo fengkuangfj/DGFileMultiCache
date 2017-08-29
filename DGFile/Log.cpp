@@ -24,10 +24,7 @@ KEVENT			CLog::ms_WaitEvent = { 0 };
 CKrnlStr*		CLog::ms_pLogFile = NULL;
 CKrnlStr*		CLog::ms_pLogDir = NULL;
 HANDLE			CLog::ms_hLogFile = NULL;
-PFILE_OBJECT	CLog::ms_pLogFileObj = NULL;
 LARGE_INTEGER	CLog::ms_liByteOffset = { 0 };
-PFLT_INSTANCE	CLog::ms_pFltInstance = NULL;
-ULONG			CLog::ms_ulSectorSize = 0;
 PETHREAD		CLog::ms_pEThread = NULL;
 BOOLEAN			CLog::ms_bCanInsertLog = FALSE;
 
@@ -45,7 +42,7 @@ CLog::~CLog()
 
 VOID
 CLog::ThreadStart(
-__in PVOID StartContext
+	__in PVOID StartContext
 )
 {
 	CLog			Log;
@@ -76,27 +73,50 @@ __in PVOID StartContext
 				KernelMode,
 				FALSE,
 				&WaitTime
-				);
+			);
 			Log.GetLock();
 			switch (ntStatus)
 			{
 			case STATUS_SUCCESS:
+			{
+				Log.FreeLock();
+				bCanWriteLog = Log.CheckLogFile();
+				Log.GetLock();
+				if (!bCanWriteLog)
+					__leave;
+
+				do
+				{
+					if (!Log.Pop(&LogInfo))
+						__leave;
+
+					Log.FreeLock();
+					if (!Log.Write(&LogInfo))
+					{
+						Log.GetLock();
+						KdPrintKrnl(LOG_PRINTF_LEVEL_WARNING, LOG_RECORED_LEVEL_NEEDNOT, L"Log.Write failed. Log(%wZ)",
+							LogInfo.Get());
+
+						__leave;
+					}
+					Log.GetLock();
+
+					ulCount++;
+				} while (ulCount < EVERY_TIME_LOG_MAX_COUNT);
+
+				break;
+			}
 			case STATUS_TIMEOUT:
 			{
 				Log.FreeLock();
-				bCanWriteLog = Log.LogFileReady();
+				bCanWriteLog = Log.CheckLogFile();
 				Log.GetLock();
 				if (bCanWriteLog)
 				{
 					do
 					{
 						if (!Log.Pop(&LogInfo))
-						{
-							if (STATUS_SUCCESS == ntStatus)
-								__leave;
-
 							break;
-						}
 
 						Log.FreeLock();
 						if (!Log.Write(&LogInfo))
@@ -114,16 +134,25 @@ __in PVOID StartContext
 				}
 				else
 				{
-					if (STATUS_SUCCESS != ntStatus)
-					{
-						Log.FreeLock();
-						bCanWriteLog = Log.InitLogFile(TRUE);
-						Log.GetLock();
-					}
-				}
+					if (!Log.InitLogFileName())
+						break;
 
-				if (!bCanWriteLog && STATUS_SUCCESS == ntStatus)
-					__leave;
+					Log.FreeLock();
+					if (!Log.InitLogDir(ms_pLogFile))
+					{
+						Log.GetLock();
+						break;
+					}
+
+					if (!Log.InitLogFile(TRUE))
+					{
+						Log.GetLock();
+						break;
+					}
+					Log.GetLock();
+
+					bCanWriteLog = TRUE;
+				}
 
 				break;
 			}
@@ -155,11 +184,12 @@ __in PVOID StartContext
 BOOLEAN
 CLog::Init()
 {
-	BOOLEAN			bRet = FALSE;
+	BOOLEAN		bRet = FALSE;
 
-	NTSTATUS		ntStatus = STATUS_UNSUCCESSFUL;
-	HANDLE			hThead = NULL;
-
+	NTSTATUS	ntStatus = STATUS_UNSUCCESSFUL;
+	HANDLE		hThead = NULL;
+	BOOLEAN		bPsCreateSystemThread = FALSE;
+	KPRIORITY	kPriority = 0;
 
 	KdPrintKrnl(LOG_PRINTF_LEVEL_INFO, LOG_RECORED_LEVEL_NEEDNOT, L"begin");
 
@@ -181,7 +211,7 @@ CLog::Init()
 			NULL,
 			ThreadStart,
 			NULL
-			);
+		);
 		if (!NT_SUCCESS(ntStatus))
 		{
 			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"PsCreateSystemThread failed. (%x)",
@@ -190,6 +220,8 @@ CLog::Init()
 			__leave;
 		}
 
+		bPsCreateSystemThread = TRUE;
+
 		ntStatus = ObReferenceObjectByHandle(
 			hThead,
 			GENERIC_ALL,
@@ -197,7 +229,7 @@ CLog::Init()
 			KernelMode,
 			(PVOID *)&ms_pEThread,
 			NULL
-			);
+		);
 		if (!NT_SUCCESS(ntStatus))
 		{
 			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"ObReferenceObjectByHandle failed. (%x)",
@@ -226,6 +258,23 @@ CLog::Init()
 
 		if (!bRet)
 		{
+			if (bPsCreateSystemThread)
+			{
+				if (KeSetEvent(&ms_WaitEvent, kPriority, FALSE))
+					KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"already signaled");
+
+				ntStatus = KeWaitForSingleObject(
+					ms_pEThread,
+					Executive,
+					KernelMode,
+					FALSE,
+					NULL
+				);
+				if (!NT_SUCCESS(ntStatus))
+					KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"KeWaitForSingleObject failed. (%x)",
+						ntStatus);
+			}
+
 			ExDeleteResourceLite(&ms_Lock);
 			RtlZeroMemory(&ms_Lock, sizeof(ms_Lock));
 
@@ -265,11 +314,7 @@ CLog::Unload()
 
 		FreeLock();
 		if (KeSetEvent(&ms_WaitEvent, kPriority, FALSE))
-		{
-			GetLock();
 			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"already signaled");
-			__leave;
-		}
 
 		ntStatus = KeWaitForSingleObject(
 			ms_pEThread,
@@ -277,7 +322,7 @@ CLog::Unload()
 			KernelMode,
 			FALSE,
 			NULL
-			);
+		);
 		GetLock();
 		if (!NT_SUCCESS(ntStatus))
 		{
@@ -306,22 +351,16 @@ CLog::Unload()
 	}
 	__finally
 	{
+		FreeLock();
+
+		ExDeleteResourceLite(&ms_Lock);
+		RtlZeroMemory(&ms_Lock, sizeof(ms_Lock));
+
 		delete ms_pLogFile;
 		ms_pLogFile = NULL;
 
 		delete ms_pLogDir;
 		ms_pLogDir = NULL;
-
-		if (ms_pFltInstance)
-		{
-			FltObjectDereference(ms_pFltInstance);
-			ms_pFltInstance = NULL;
-		}
-
-		FreeLock();
-
-		ExDeleteResourceLite(&ms_Lock);
-		RtlZeroMemory(&ms_Lock, sizeof(ms_Lock));
 	}
 
 	KdPrintKrnl(LOG_PRINTF_LEVEL_INFO, LOG_RECORED_LEVEL_NEEDNOT, L"end");
@@ -352,7 +391,9 @@ CLog::GetLock()
 		// 判断当前锁引用计数是否合法
 		if (m_LockRef < 0)
 		{
-			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"m_LockRef < 0 (%d)", m_LockRef);
+			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"m_LockRef < 0 (%d)",
+				m_LockRef);
+
 			__leave;
 		}
 
@@ -408,7 +449,9 @@ CLog::FreeLock()
 		// 判断当前锁引用计数是否合法
 		if (m_LockRef <= 0)
 		{
-			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"m_LockRef <= 0 (%d)", m_LockRef);
+			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"m_LockRef <= 0 (%d)",
+				m_LockRef);
+
 			__leave;
 		}
 
@@ -441,7 +484,7 @@ CLog::FreeLock()
 
 BOOLEAN
 CLog::Pop(
-__out CKrnlStr * pLog
+	__out CKrnlStr * pLog
 )
 {
 	BOOLEAN		bRet = FALSE;
@@ -494,7 +537,7 @@ __out CKrnlStr * pLog
 
 BOOLEAN
 CLog::Write(
-__in CKrnlStr * pLog
+	__in CKrnlStr * pLog
 )
 {
 	BOOLEAN			bRet = FALSE;
@@ -502,7 +545,7 @@ __in CKrnlStr * pLog
 	NTSTATUS		ntStatus = STATUS_UNSUCCESSFUL;
 	ULONG			ulWriteLen = 0;
 	PCHAR  			pWriteBuf = NULL;
-
+	IO_STATUS_BLOCK IoStatusBlock = { 0 };
 	CKrnlStr		Log;
 
 
@@ -518,14 +561,13 @@ __in CKrnlStr * pLog
 
 		if (!IsSameDate(pLog))
 		{
-			FreeLock();
 			if (!InitLogFileName())
 			{
-				GetLock();
 				KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"InitLogFileName failed");
 				__leave;
 			}
 
+			FreeLock();
 			if (!InitLogDir(ms_pLogFile))
 			{
 				GetLock();
@@ -569,21 +611,7 @@ __in CKrnlStr * pLog
 			__leave;
 		}
 
-		pWriteBuf = (PCHAR)FltAllocatePoolAlignedWithTag(
-			ms_pFltInstance,
-			PagedPool,
-			ulWriteLen,
-			LOG_TAG
-			);
-		if (!pWriteBuf)
-		{
-			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"FltAllocatePoolAlignedWithTag failed. ulWriteLen(%d)",
-				ulWriteLen);
-
-			__leave;
-		}
-
-		RtlZeroMemory(pWriteBuf, ulWriteLen);
+		pWriteBuf = new(LOG_TAG)CHAR[ulWriteLen];
 
 		ntStatus = RtlUnicodeToMultiByteN(
 			pWriteBuf,
@@ -591,7 +619,7 @@ __in CKrnlStr * pLog
 			NULL,
 			Log.GetString(),
 			Log.GetLenB()
-			);
+		);
 		if (!NT_SUCCESS(ntStatus))
 		{
 			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"RtlUnicodeToMultiByteN failed. Log(%wZ)",
@@ -601,24 +629,24 @@ __in CKrnlStr * pLog
 		}
 
 		FreeLock();
-		ntStatus = FltWriteFile(
-			ms_pFltInstance,
-			ms_pLogFileObj,
-			&ms_liByteOffset,
-			ulWriteLen,
+		ntStatus = ZwWriteFile(
+			ms_hLogFile,
+			NULL,
+			NULL,
+			NULL,
+			&IoStatusBlock,
 			pWriteBuf,
-			0,
-			NULL,
-			NULL,
+			ulWriteLen,
+			&ms_liByteOffset,
 			NULL
-			);
+		);
 		if (!NT_SUCCESS(ntStatus))
 		{
 			GetLock();
 
 			if (STATUS_TOO_LATE != ntStatus)
-				KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"FltWriteFile failed. (%x) Log(%wZ)",
-				ntStatus, pLog->Get());
+				KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"ZwWriteFile failed. (%x) Log(%wZ)",
+					ntStatus, pLog->Get());
 
 			__leave;
 		}
@@ -628,7 +656,22 @@ __in CKrnlStr * pLog
 
 		if (ms_liByteOffset.QuadPart > MAX_LOG_FILE_SIZE)
 		{
+			if (!InitLogFileName())
+			{
+				KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"InitLogFileName failed");
+				__leave;
+			}
+
 			FreeLock();
+			if (!InitLogDir(ms_pLogFile))
+			{
+				GetLock();
+				KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"InitLogDir failed. (%wZ)",
+					ms_pLogFile->Get());
+
+				__leave;
+			}
+
 			if (!InitLogFile(TRUE))
 			{
 				GetLock();
@@ -642,16 +685,8 @@ __in CKrnlStr * pLog
 	}
 	__finally
 	{
-		if (pWriteBuf)
-		{
-			FltFreePoolAlignedWithTag(
-				ms_pFltInstance,
-				pWriteBuf,
-				LOG_TAG
-				);
-
-			pWriteBuf = NULL;
-		}
+		delete pWriteBuf;
+		pWriteBuf = NULL;
 
 		FreeLock();
 	}
@@ -660,7 +695,7 @@ __in CKrnlStr * pLog
 }
 
 BOOLEAN
-CLog::LogFileReady()
+CLog::CheckLogFile()
 {
 	BOOLEAN				bRet = FALSE;
 
@@ -674,34 +709,8 @@ CLog::LogFileReady()
 	{
 		GetLock();
 
-		if (!ms_ulSectorSize)
-			__leave;
-
-		if (!CMinifilter::CheckEnv(MINIFILTER_ENV_TYPE_FLT_FILTER))
-		{
-			KdPrintKrnl(LOG_PRINTF_LEVEL_WARNING, LOG_RECORED_LEVEL_NEEDNOT, L"CMinifilter::CheckEnv failed");
-			__leave;
-		}
-
-		if (!ms_pFltInstance)
-		{
-			KdPrintKrnl(LOG_PRINTF_LEVEL_WARNING, LOG_RECORED_LEVEL_NEEDNOT, L"NULL == ms_pFltInstance");
-			__leave;
-		}
-
 		if (!ms_pLogFile || !ms_pLogFile->GetString())
 			__leave;
-
-		FreeLock();
-		if (!InitLogDir(ms_pLogFile))
-		{
-			GetLock();
-			KdPrintKrnl(LOG_PRINTF_LEVEL_WARNING, LOG_RECORED_LEVEL_NEEDNOT, L"InitLogDir failed. (%wZ)",
-				ms_pLogFile->Get());
-
-			__leave;
-		}
-		GetLock();
 
 		InitializeObjectAttributes(
 			&Oa,
@@ -709,12 +718,10 @@ CLog::LogFileReady()
 			OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
 			NULL,
 			NULL
-			);
+		);
 
 		FreeLock();
-		ntStatus = FltCreateFile(
-			CMinifilter::gFilterHandle,
-			ms_pFltInstance,
+		ntStatus = ZwCreateFile(
 			&Handle,
 			FILE_READ_ATTRIBUTES,
 			&Oa,
@@ -725,9 +732,8 @@ CLog::LogFileReady()
 			FILE_OPEN,
 			FILE_NON_DIRECTORY_FILE | FILE_COMPLETE_IF_OPLOCKED,
 			NULL,
-			0,
-			IO_IGNORE_SHARE_ACCESS_CHECK
-			);
+			0
+		);
 		GetLock();
 		if (!NT_SUCCESS(ntStatus))
 		{
@@ -735,10 +741,10 @@ CLog::LogFileReady()
 			{
 				if (STATUS_DELETE_PENDING == ntStatus)
 					KdPrintKrnl(LOG_PRINTF_LEVEL_WARNING, LOG_RECORED_LEVEL_NEEDNOT, L"FltCreateFile failed. (%x) File(%wZ)",
-					ntStatus, ms_pLogFile->Get());
+						ntStatus, ms_pLogFile->Get());
 				else
 					KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"FltCreateFile failed. (%x) File(%wZ)",
-					ntStatus, ms_pLogFile->Get());
+						ntStatus, ms_pLogFile->Get());
 			}
 
 			__leave;
@@ -752,7 +758,7 @@ CLog::LogFileReady()
 
 		if (Handle)
 		{
-			FltClose(Handle);
+			ZwClose(Handle);
 			Handle = NULL;
 		}
 	}
@@ -762,7 +768,7 @@ CLog::LogFileReady()
 
 BOOLEAN
 CLog::InitLogFile(
-__in BOOLEAN bReset
+	__in BOOLEAN bReset
 )
 {
 	BOOLEAN						bRet = FALSE;
@@ -771,7 +777,6 @@ __in BOOLEAN bReset
 	NTSTATUS					ntStatus = STATUS_UNSUCCESSFUL;
 	IO_STATUS_BLOCK				Iosb = { 0 };
 	FILE_STANDARD_INFORMATION	FileStandardInfo = { 0 };
-	ULONG						ulRet = 0;
 
 
 	__try
@@ -780,16 +785,10 @@ __in BOOLEAN bReset
 
 		if (bReset)
 		{
-			if (ms_pLogFileObj)
-			{
-				ObDereferenceObject(ms_pLogFileObj);
-				ms_pLogFileObj = NULL;
-			}
-
 			if (ms_hLogFile)
 			{
 				FreeLock();
-				FltClose(ms_hLogFile);
+				ZwClose(ms_hLogFile);
 				GetLock();
 				ms_hLogFile = NULL;
 			}
@@ -797,17 +796,19 @@ __in BOOLEAN bReset
 			ms_liByteOffset.QuadPart = 0;
 		}
 
-		if (!InitLogFileName())
-			__leave;
-
-		if (!CMinifilter::CheckEnv(MINIFILTER_ENV_TYPE_FLT_FILTER))
-		{
-			KdPrintKrnl(LOG_PRINTF_LEVEL_WARNING, LOG_RECORED_LEVEL_NEEDNOT, L"NULL == CMinifilter::CheckEnv failed");
-			__leave;
-		}
-
-		if (!ms_pFltInstance)
-			__leave;
+		// 		if (!InitLogFileName())
+		// 			__leave;
+		// 
+		// 		FreeLock();
+		// 		if (!InitLogDir(ms_pLogFile))
+		// 		{
+		// 			GetLock();
+		// 			KdPrintKrnl(LOG_PRINTF_LEVEL_WARNING, LOG_RECORED_LEVEL_NEEDNOT, L"InitLogDir failed. (%wZ)",
+		// 				ms_pLogFile->Get());
+		// 
+		// 			__leave;
+		// 		}
+		// 		GetLock();
 
 		if (!ms_pLogFile || !ms_pLogFile->Get())
 		{
@@ -821,59 +822,39 @@ __in BOOLEAN bReset
 			OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
 			NULL,
 			NULL
-			);
+		);
 
 		FreeLock();
-		ntStatus = FltCreateFile(
-			CMinifilter::gFilterHandle,
-			ms_pFltInstance,
+		ntStatus = ZwCreateFile(
 			&ms_hLogFile,
 			GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
 			&Oa,
 			&Iosb,
 			NULL,
 			FILE_ATTRIBUTE_NORMAL,
-			NULL,
+			FILE_SHARE_READ,
 			FILE_OPEN_IF,
-			FILE_NON_DIRECTORY_FILE | FILE_COMPLETE_IF_OPLOCKED | FILE_SYNCHRONOUS_IO_NONALERT/* | FILE_NO_INTERMEDIATE_BUFFERING*/,
+			FILE_NON_DIRECTORY_FILE | FILE_COMPLETE_IF_OPLOCKED | FILE_SYNCHRONOUS_IO_NONALERT,
 			NULL,
-			0,
-			IO_IGNORE_SHARE_ACCESS_CHECK
-			);
+			0
+		);
 		GetLock();
 		if (!NT_SUCCESS(ntStatus))
 		{
 			if (STATUS_OBJECT_PATH_NOT_FOUND != ntStatus)
 				KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"FltCreateFile failed (%x) File(%wZ)",
-				ntStatus, ms_pLogFile->Get());
+					ntStatus, ms_pLogFile->Get());
 
 			__leave;
 		}
 
-		ntStatus = ObReferenceObjectByHandle(
+		ntStatus = ZwQueryInformationFile(
 			ms_hLogFile,
-			0,
-			NULL,
-			KernelMode,
-			(PVOID *)&ms_pLogFileObj,
-			NULL
-			);
-		if (!NT_SUCCESS(ntStatus))
-		{
-			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"ObReferenceObjectByHandle failed (%x) File(%wZ)",
-				ntStatus, ms_pLogFile->Get());
-
-			__leave;
-		}
-
-		ntStatus = FltQueryInformationFile(
-			ms_pFltInstance,
-			ms_pLogFileObj,
+			&Iosb,
 			&FileStandardInfo,
 			sizeof(FILE_STANDARD_INFORMATION),
-			FileStandardInformation,
-			&ulRet
-			);
+			FileStandardInformation
+		);
 		if (!NT_SUCCESS(ntStatus))
 		{
 			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"FltQueryInformationFile failed. (%x) File(%wZ)",
@@ -882,7 +863,7 @@ __in BOOLEAN bReset
 			__leave;
 		}
 
-		ms_liByteOffset.QuadPart = (ULONG)ROUND_TO_SIZE(FileStandardInfo.EndOfFile.QuadPart, ms_ulSectorSize);
+		ms_liByteOffset.QuadPart = FileStandardInfo.EndOfFile.QuadPart;
 
 		bRet = TRUE;
 	}
@@ -923,6 +904,9 @@ CLog::InitLogFileName()
 			__leave;
 		}
 
+		ms_pLogDir->Set(L"\\Device\\Harddiskvolume1\\Program Files (x86)\\huatusoft\\common\\core\\log",
+			(USHORT)wcslen(L"\\Device\\Harddiskvolume1\\Program Files (x86)\\huatusoft\\common\\core\\log"));
+
 		if (!ms_pLogDir || !ms_pLogDir->GetString())
 			__leave;
 
@@ -953,7 +937,7 @@ CLog::InitLogFileName()
 			nowFields.Year,
 			nowFields.Month,
 			nowFields.Day
-			);
+		);
 		if (!NT_SUCCESS(ntStatus))
 		{
 			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"RtlStringCchPrintfW failed. (%x)",
@@ -989,7 +973,7 @@ CLog::InitLogFileName()
 			nowFields.Minute,
 			nowFields.Second,
 			nowFields.Milliseconds
-			);
+		);
 		if (!NT_SUCCESS(ntStatus))
 		{
 			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"RtlStringCchPrintfW failed. (%x)",
@@ -1026,8 +1010,8 @@ CLog::InitLogFileName()
 
 BOOLEAN
 CLog::Insert(
-__in WCHAR	*	pLog,
-__in USHORT		usLenCh
+	__in WCHAR	*	pLog,
+	__in USHORT		usLenCh
 )
 {
 	BOOLEAN		bRet = FALSE;
@@ -1089,16 +1073,10 @@ CLog::ReleaseLogFile()
 	{
 		GetLock();
 
-		if (ms_pLogFileObj)
-		{
-			ObDereferenceObject(ms_pLogFileObj);
-			ms_pLogFileObj = NULL;
-		}
-
 		if (ms_hLogFile)
 		{
 			FreeLock();
-			FltClose(ms_hLogFile);
+			ZwClose(ms_hLogFile);
 			GetLock();
 			ms_hLogFile = NULL;
 		}
@@ -1115,7 +1093,7 @@ CLog::ReleaseLogFile()
 
 BOOLEAN
 CLog::SetLogDir(
-__in CKrnlStr * pLogDir
+	__in CKrnlStr * pLogDir
 )
 {
 	BOOLEAN bRet = FALSE;
@@ -1142,19 +1120,6 @@ __in CKrnlStr * pLogDir
 			__leave;
 		}
 
-		if (!InitFltInstance())
-		{
-			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"InitFltInstance failed");
-			__leave;
-		}
-
-		if (!InitSectorSize())
-		{
-			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"InitSectorSize failed");
-
-			__leave;
-		}
-
 		bRet = TRUE;
 	}
 	__finally
@@ -1166,266 +1131,8 @@ __in CKrnlStr * pLogDir
 }
 
 BOOLEAN
-CLog::InitFltInstance()
-{
-	BOOLEAN			bRet = FALSE;
-
-	NTSTATUS		ntStatus = STATUS_UNSUCCESSFUL;
-	PFLT_VOLUME		pFltVolume = NULL;
-
-	CKrnlStr		VolumeName;
-
-
-	__try
-	{
-		if (ms_pFltInstance)
-		{
-			FltObjectDereference(ms_pFltInstance);
-			ms_pFltInstance = NULL;
-		}
-
-		if (!VolumeName.Set(ms_pLogDir))
-		{
-			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"VolumeName.Set failed. (%wZ)",
-				ms_pLogDir->Get());
-
-			__leave;
-		}
-
-		if (24 == VolumeName.GetLenCh())
-		{
-			if (L'\\' == *(VolumeName.GetString() + VolumeName.GetLenCh() - 1))
-			{
-				// \Device\HarddiskVolume1\ 
-				if (!VolumeName.Shorten(23))
-				{
-					KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"VolumeName.Shorten failed. (%wZ)",
-						VolumeName.Get());
-
-					__leave;
-				}
-			}
-		}
-		else if (25 <= VolumeName.GetLenCh())
-		{
-			if (!VolumeName.Shorten(25))
-			{
-				KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"VolumeName.Shorten failed. (%wZ)",
-					VolumeName.Get());
-
-				__leave;
-			}
-
-			if (L'\\' == *(VolumeName.GetString() + VolumeName.GetLenCh() - 1))
-			{
-				// \Device\HarddiskVolume11\ 
-				if (!VolumeName.Shorten(24))
-				{
-					KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"VolumeName.Shorten failed. (%wZ)",
-						VolumeName.Get());
-
-					__leave;
-				}
-			}
-			else
-			{
-				// \Device\HarddiskVolume1\X
-				if (!VolumeName.Shorten(23))
-				{
-					KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"VolumeName.Shorten failed. (%wZ)",
-						VolumeName.Get());
-
-					__leave;
-				}
-			}
-		}
-
-		ntStatus = FltGetVolumeFromName(
-			CMinifilter::gFilterHandle,
-			VolumeName.Get(),
-			&pFltVolume
-			);
-		if (!NT_SUCCESS(ntStatus))
-		{
-			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"FltGetVolumeFromName failed. (%x)",
-				ntStatus);
-
-			__leave;
-		}
-
-		if (!pFltVolume)
-		{
-			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"NULL == pFltVolume");
-			__leave;
-		}
-
-		ntStatus = FltGetVolumeInstanceFromName(
-			CMinifilter::gFilterHandle,
-			pFltVolume,
-			NULL,
-			&ms_pFltInstance
-			);
-		if (!NT_SUCCESS(ntStatus))
-		{
-			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"FltGetVolumeInstanceFromName failed. (%x)",
-				ntStatus);
-
-			__leave;
-		}
-
-		if (!ms_pFltInstance)
-		{
-			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"NULL == ms_pFltInstance");
-			__leave;
-		}
-
-		bRet = TRUE;
-	}
-	__finally
-	{
-		if (pFltVolume)
-		{
-			FltObjectDereference(pFltVolume);
-			pFltVolume = NULL;
-		}
-	}
-
-	return bRet;
-}
-
-BOOLEAN
-CLog::InitSectorSize()
-{
-	BOOLEAN					bRet = FALSE;
-
-	NTSTATUS				ntStatus = STATUS_UNSUCCESSFUL;
-	PFLT_VOLUME				pFltVolume = NULL;
-	UCHAR					volPropBuffer[sizeof(FLT_VOLUME_PROPERTIES) + 512] = { 0 };
-	PFLT_VOLUME_PROPERTIES	volProp = (PFLT_VOLUME_PROPERTIES)volPropBuffer;
-	ULONG					retLen = 0;
-
-	CKrnlStr				VolumeName;
-
-
-	__try
-	{
-		if (!VolumeName.Set(ms_pLogDir))
-		{
-			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"VolumeName.Set failed. (%wZ)",
-				ms_pLogDir->Get());
-
-			__leave;
-		}
-
-		if (24 == VolumeName.GetLenCh())
-		{
-			if (L'\\' == *(VolumeName.GetString() + VolumeName.GetLenCh() - 1))
-			{
-				// \Device\HarddiskVolume1\ 
-				if (!VolumeName.Shorten(23))
-				{
-					KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"VolumeName.Shorten failed. (%wZ)",
-						VolumeName.Get());
-
-					__leave;
-				}
-			}
-		}
-		else if (25 <= VolumeName.GetLenCh())
-		{
-			if (!VolumeName.Shorten(25))
-			{
-				KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"VolumeName.Shorten failed. (%wZ)",
-					VolumeName.Get());
-
-				__leave;
-			}
-
-			if (L'\\' == *(VolumeName.GetString() + VolumeName.GetLenCh() - 1))
-			{
-				// \Device\HarddiskVolume11\ 
-				if (!VolumeName.Shorten(24))
-				{
-					KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"VolumeName.Shorten failed. (%wZ)",
-						VolumeName.Get());
-
-					__leave;
-				}
-			}
-			else
-			{
-				// \Device\HarddiskVolume1\X
-				if (!VolumeName.Shorten(23))
-				{
-					KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"VolumeName.Shorten failed. (%wZ)",
-						VolumeName.Get());
-
-					__leave;
-				}
-			}
-		}
-
-		ntStatus = FltGetVolumeFromName(
-			CMinifilter::gFilterHandle,
-			VolumeName.Get(),
-			&pFltVolume
-			);
-		if (!NT_SUCCESS(ntStatus))
-		{
-			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"FltGetVolumeFromName failed. (%x)",
-				ntStatus);
-
-			__leave;
-		}
-
-		if (!pFltVolume)
-		{
-			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"NULL == pFltVolume");
-			__leave;
-		}
-
-		//
-		//  Always get the volume properties, so I can get a sector size
-		//
-		ntStatus = FltGetVolumeProperties(
-			pFltVolume,
-			volProp,
-			sizeof(volPropBuffer),
-			&retLen
-			);
-		if (!NT_SUCCESS(ntStatus))
-		{
-			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"FltGetVolumeProperties failed. (%x)",
-				ntStatus);
-
-			__leave;
-		}
-
-		//
-		//  Save the sector size in the context for later use.  Note that
-		//  we will pick a minimum sector size if a sector size is not
-		//  specified.
-		//
-
-		ms_ulSectorSize = max(volProp->SectorSize, MIN_SECTOR_SIZE);
-
-		bRet = TRUE;
-	}
-	__finally
-	{
-		if (pFltVolume)
-		{
-			FltObjectDereference(pFltVolume);
-			pFltVolume = NULL;
-		}
-	}
-
-	return bRet;
-}
-
-BOOLEAN
 CLog::InitLogDir(
-__in CKrnlStr * pLogPath
+	__in CKrnlStr * pLogPath
 )
 {
 	BOOLEAN		bRet = FALSE;
@@ -1447,9 +1154,9 @@ __in CKrnlStr * pLogPath
 				pLogPath->Get());
 
 			__leave;
-		}		
+		}
 
-		if (!CFile::CreateDir(&LogDir, ms_pFltInstance))
+		if (!CFile::CreateDir(&LogDir))
 		{
 			KdPrintKrnl(LOG_PRINTF_LEVEL_ERROR, LOG_RECORED_LEVEL_NEEDNOT, L"CreateDir failed. (%wZ)",
 				LogDir.Get());
@@ -1469,7 +1176,7 @@ __in CKrnlStr * pLogPath
 
 BOOLEAN
 CLog::IsOldLogFile(
-__in CKrnlStr * pName
+	__in CKrnlStr * pName
 )
 {
 	BOOLEAN			bRet = FALSE;
@@ -1606,7 +1313,7 @@ __in CKrnlStr * pName
 
 BOOLEAN
 CLog::IsSameDate(
-__in CKrnlStr * pLog
+	__in CKrnlStr * pLog
 )
 {
 	BOOLEAN		bRet = TRUE;

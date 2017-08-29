@@ -61,8 +61,8 @@ public:
 	*/
 	BOOLEAN
 		Set(
-		__in PWCHAR pWchStr,
-		__in USHORT usLenCh
+			__in PWCHAR pWchStr,
+			__in USHORT usLenCh
 		);
 
 	/*
@@ -81,8 +81,8 @@ public:
 	*/
 	BOOLEAN
 		Set(
-		__in PCHAR	pChStr,
-		__in USHORT usLenCh
+			__in PCHAR	pChStr,
+			__in USHORT usLenCh
 		);
 
 	/*
@@ -101,7 +101,7 @@ public:
 	*/
 	BOOLEAN
 		Set(
-		__in PUNICODE_STRING pUnicodeStr
+			__in PUNICODE_STRING pUnicodeStr
 		);
 
 	/*
@@ -119,7 +119,7 @@ public:
 	*/
 	BOOLEAN
 		Set(
-		__in CKrnlStr * pCKrnlStr
+			__in CKrnlStr * pCKrnlStr
 		);
 
 	/*
@@ -220,8 +220,8 @@ public:
 	*/
 	BOOLEAN
 		Equal(
-		__in CKrnlStr *	pCKrnlStr,
-		__in BOOLEAN	bIgnoreCase
+			__in CKrnlStr *	pCKrnlStr,
+			__in BOOLEAN	bIgnoreCase
 		);
 
 	/*
@@ -241,9 +241,9 @@ public:
 	*/
 	BOOLEAN
 		Equal(
-		__in PWCHAR		pWchStr,
-		__in USHORT		usLenCh,
-		__in BOOLEAN	bIgnoreCase
+			__in PWCHAR		pWchStr,
+			__in USHORT		usLenCh,
+			__in BOOLEAN	bIgnoreCase
 		);
 
 	/*
@@ -263,9 +263,9 @@ public:
 	*/
 	BOOLEAN
 		Equal(
-		__in PCHAR		pChStr,
-		__in USHORT		usLenCh,
-		__in BOOLEAN	bIgnoreCase
+			__in PCHAR		pChStr,
+			__in USHORT		usLenCh,
+			__in BOOLEAN	bIgnoreCase
 		);
 
 	/*
@@ -285,8 +285,8 @@ public:
 	*/
 	BOOLEAN
 		Equal(
-		__in PUNICODE_STRING	pUnicodeStr,
-		__in BOOLEAN			bIgnoreCase
+			__in PUNICODE_STRING	pUnicodeStr,
+			__in BOOLEAN			bIgnoreCase
 		);
 
 	/*
@@ -305,8 +305,8 @@ public:
 	*/
 	BOOLEAN
 		Append(
-		__in PCHAR	pChStr,
-		__in USHORT	usLenCh
+			__in PCHAR	pChStr,
+			__in USHORT	usLenCh
 		);
 
 	/*
@@ -325,8 +325,8 @@ public:
 	*/
 	BOOLEAN
 		Append(
-		__in PWCHAR pWchStr,
-		__in USHORT	usLenCh
+			__in PWCHAR pWchStr,
+			__in USHORT	usLenCh
 		);
 
 	/*
@@ -345,7 +345,7 @@ public:
 	*/
 	BOOLEAN
 		Append(
-		__in PUNICODE_STRING pUnicodeStr
+			__in PUNICODE_STRING pUnicodeStr
 		);
 
 	/*
@@ -364,7 +364,7 @@ public:
 	*/
 	BOOLEAN
 		Append(
-		__in CKrnlStr * pCKrnlStr
+			__in CKrnlStr * pCKrnlStr
 		);
 
 	/*
@@ -383,7 +383,7 @@ public:
 	*/
 	BOOLEAN
 		Shorten(
-		__in USHORT usLenCh
+			__in USHORT usLenCh
 		);
 
 	/*
@@ -402,7 +402,7 @@ public:
 	*/
 	BOOLEAN
 		Lengthen(
-		__in USHORT usLenCh
+			__in USHORT usLenCh
 		);
 
 	/*
@@ -438,15 +438,15 @@ public:
 	*/
 	PWCHAR
 		SearchCharacter(
-		__in WCHAR	wch,
-		__in PWCHAR	pWchBegin,
-		__in PWCHAR	pWchEnd
+			__in WCHAR	wch,
+			__in PWCHAR	pWchBegin,
+			__in PWCHAR	pWchEnd
 		);
 
 	PWCHAR
 		Search(
-		__in PWCHAR		pDes,
-		__in BOOLEAN	bIgnoreCase
+			__in PWCHAR		pDes,
+			__in BOOLEAN	bIgnoreCase
 		);
 
 	ULONG
@@ -471,7 +471,7 @@ private:
 	*/
 	BOOLEAN
 		Alloc(
-		__in USHORT usLenCh
+			__in USHORT usLenCh
 		);
 
 	/*
@@ -509,11 +509,11 @@ private:
 	*/
 	BOOLEAN
 		WcharStrEqual(
-		__in PWCHAR		pWchPosition1,
-		__in USHORT		usLenCh1,
-		__in PWCHAR		pWchPosition2,
-		__in USHORT		usLenCh2,
-		__in USHORT		usLenChCmp,
-		__in BOOLEAN	bIgnoreCase
+			__in PWCHAR		pWchPosition1,
+			__in USHORT		usLenCh1,
+			__in PWCHAR		pWchPosition2,
+			__in USHORT		usLenCh2,
+			__in USHORT		usLenChCmp,
+			__in BOOLEAN	bIgnoreCase
 		);
 };

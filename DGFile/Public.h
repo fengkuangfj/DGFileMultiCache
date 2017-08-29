@@ -38,39 +38,39 @@ typedef enum _LOG_RECORED_LEVEL
 extern "C"
 UCHAR*
 PsGetProcessImageFileName(
-__in PEPROCESS pEprocess
+	__in PEPROCESS pEprocess
 );
 
 VOID
 PrintKrnl(
-__in							LOG_PRINTF_LEVEL	PrintfLevel,
-__in							LOG_RECORED_LEVEL	RecoredLevel,
-__in							PCHAR				pFuncName,
-__in							ULONG				ulLine,
-__in __drv_formatString(printf)	PWCHAR				Fmt,
-...
+	__in							LOG_PRINTF_LEVEL	PrintfLevel,
+	__in							LOG_RECORED_LEVEL	RecoredLevel,
+	__in							PCHAR				pFuncName,
+	__in							ULONG				ulLine,
+	__in __drv_formatString(printf)	PWCHAR				Fmt,
+	...
 );
 
 PVOID
 __cdecl operator
 new(
-size_t	size,
-ULONG	ulPoolTag
-);
+	size_t	size,
+	ULONG	ulPoolTag
+	);
 
 VOID
 __cdecl operator
 delete(
-PVOID lpPointer
-);
+	PVOID lpPointer
+	);
 
 VOID
 __cdecl operator
 delete[](
-PVOID lpPointer
-);
+	PVOID lpPointer
+	);
 
 VOID
 Sleep(
-__in LONGLONG llTimeMilliseconds
+	__in LONGLONG llTimeMilliseconds
 );

@@ -12,6 +12,21 @@
 #define DGFILE_CD_ROM_FILE_SYSTEM_DEVICE_NAME	L"\\Device\\DGFileCdRomFileSystem"
 #define	DGFILE_SDDL								L"D:P(A;;GA;;;SY)(A;;GRGWGX;;;BA)(A;;GRGWGX;;;WD)(A;;GRGX;;;RC)"
 
+typedef enum _FSD_IDENTIFIER_TYPE
+{
+	DGL = ':DGL', // Dgfile Global
+	DCB = ':DCB', // Disk Control Block
+	VCB = ':VCB', // Volume Control Block
+	FCB = ':FCB', // File Control Block
+	CCB = ':CCB', // Context Control Block
+} FSD_IDENTIFIER_TYPE, *PFSD_IDENTIFIER_TYPE, *LPFSD_IDENTIFIER_TYPE;
+
+typedef struct _FSD_IDENTIFIER
+{
+	FSD_IDENTIFIER_TYPE Type;
+	ULONG				Size;
+} FSD_IDENTIFIER, *PFSD_IDENTIFIER, *LPFSD_IDENTIFIER;
+
 typedef struct _IRP_LIST
 {
 	LIST_ENTRY ListHead;
@@ -31,6 +46,20 @@ typedef struct _IRP_ENTRY
 	LARGE_INTEGER		TickCount;
 	PIRP_LIST			IrpList;
 } IRP_ENTRY, *PIRP_ENTRY, *LPIRP_ENTRY;
+
+typedef struct _DGFILE_GLOBAL
+{
+	FSD_IDENTIFIER Identifier;
+	ERESOURCE Resource;
+	PDEVICE_OBJECT DeviceObject;
+	PDEVICE_OBJECT FsDiskDeviceObject;
+	PDEVICE_OBJECT FsCdDeviceObject;
+	ULONG MountId;
+	// the list of waiting IRP for mount service
+	IRP_LIST PendingService;
+	IRP_LIST NotifyService;
+	LIST_ENTRY MountPointList;
+} DGFILE_GLOBAL, *PDGFILE_GLOBAL, *LPDGFILE_GLOBAL;
 
 typedef struct _DokanDiskControlBlock
 {
@@ -174,34 +203,7 @@ typedef struct _DGFILE_CCB
 	ULONG MountId;
 } DGFILE_CCB, *PDGFILE_CCB, *LPDGFILE_CCB;
 
-typedef enum _FSD_IDENTIFIER_TYPE
-{
-	DGL = ':DGL', // Dgfile Global
-	DCB = ':DCB', // Disk Control Block
-	VCB = ':VCB', // Volume Control Block
-	FCB = ':FCB', // File Control Block
-	CCB = ':CCB', // Context Control Block
-} FSD_IDENTIFIER_TYPE, *PFSD_IDENTIFIER_TYPE, *LPFSD_IDENTIFIER_TYPE;
 
-typedef struct _FSD_IDENTIFIER
-{
-	FSD_IDENTIFIER_TYPE Type;
-	ULONG				Size;
-} FSD_IDENTIFIER, *PFSD_IDENTIFIER, *LPFSD_IDENTIFIER;
-
-typedef struct _DGFILE_GLOBAL
-{
-	FSD_IDENTIFIER Identifier;
-	ERESOURCE Resource;
-	PDEVICE_OBJECT DeviceObject;
-	PDEVICE_OBJECT FsDiskDeviceObject;
-	PDEVICE_OBJECT FsCdDeviceObject;
-	ULONG MountId;
-	// the list of waiting IRP for mount service
-	IRP_LIST PendingService;
-	IRP_LIST NotifyService;
-	LIST_ENTRY MountPointList;
-} DGFILE_GLOBAL, *PDGFILE_GLOBAL, *LPDGFILE_GLOBAL;
 
 //
 // Device driver routine declarations.
@@ -218,7 +220,6 @@ class CDGFile
 {
 public:
 	static LPDGFILE_GLOBAL			spl_lpDgfileGlobal;
-	static PFAST_IO_DISPATCH		spl_pFastIoDispatch;
 	static FS_FILTER_CALLBACKS		spl_FsFilterCallbacks;
 	static NPAGED_LOOKASIDE_LIST	spl_LookasideListIrpEntry;
 	static LOOKASIDE_LIST_EX		spl_LookasideListCcb;
@@ -243,6 +244,15 @@ public:
 		VOID
 		InitIrpList(
 			__in PIRP_LIST pIrpList
+		);
+
+	static
+		BOOLEAN
+		InitList(
+			__in CKrnlStr *		pstrKey,
+			__in CKrnlStr *		pstrValue,
+			__in CKrnlStr **	pstrList,
+			__in PULONG			pulCount
 		);
 
 private:

@@ -5,12 +5,13 @@ DRIVERTYPE=FS
 MSC_WARNING_LEVEL=/W4 /WX
 
 TARGETLIBS= $(TARGETLIBS) \
-            $(IFSKIT_LIB_PATH)\fltMgr.lib
+            $(IFSKIT_LIB_PATH)\Wdmsec.lib 
 
 SOURCES=Stdafx.cpp \
 		Public.cpp \
 		KrnlStr.cpp \
+		FileName.cpp \
+		File.cpp \
 		Log.cpp \
-		Communication.cpp \
 		DGFile.cpp \
         DGFile.rc

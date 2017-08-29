@@ -103,16 +103,18 @@
     <None Include="sources" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Communication.cpp" />
     <ClCompile Include="DGFile.cpp" />
+    <ClCompile Include="File.cpp" />
+    <ClCompile Include="FileName.cpp" />
     <ClCompile Include="KrnlStr.cpp" />
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="Public.cpp" />
     <ClCompile Include="Stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Communication.h" />
     <ClInclude Include="DGFile.h" />
+    <ClInclude Include="File.h" />
+    <ClInclude Include="FileName.h" />
     <ClInclude Include="KrnlStr.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="Public.h" />

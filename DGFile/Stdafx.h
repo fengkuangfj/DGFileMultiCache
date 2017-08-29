@@ -12,11 +12,12 @@
 // 
 // #include <ntstatus.h>
 // 
-// #define NTSTRSAFE_NO_DEPRECATE
-// #include <Ntstrsafe.h>
+#define NTSTRSAFE_NO_DEPRECATE
+#include <Ntstrsafe.h>
 
 #include "Public.h"
 #include "KrnlStr.h"
+#include "FileName.h"
+#include "File.h"
 #include "Log.h"
-#include "Communication.h"
 #include "DGFile.h"

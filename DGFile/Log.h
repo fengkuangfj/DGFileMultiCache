@@ -28,9 +28,6 @@ typedef struct _LOG_INFO
 class CLog
 {
 public:
-	static PFLT_INSTANCE	ms_pFltInstance;
-	static ULONG			ms_ulSectorSize;
-
 	CLog();
 
 	~CLog();
@@ -85,13 +82,13 @@ public:
 	*/
 	BOOLEAN
 		InitLogFile(
-		__in BOOLEAN bReset = FALSE
+			__in BOOLEAN bReset = FALSE
 		);
 
 	BOOLEAN
 		Insert(
-		__in WCHAR	*	pLog,
-		__in USHORT		usLenCh
+			__in WCHAR	*	pLog,
+			__in USHORT		usLenCh
 		);
 
 	VOID
@@ -133,14 +130,8 @@ public:
 	*/
 	BOOLEAN
 		SetLogDir(
-		__in CKrnlStr * pLogDir
+			__in CKrnlStr * pLogDir
 		);
-
-	BOOLEAN
-		InitFltInstance();
-
-	BOOLEAN
-		InitSectorSize();
 
 private:
 	static LIST_ENTRY		ms_ListHead;
@@ -150,7 +141,6 @@ private:
 	static CKrnlStr*		ms_pLogFile;
 	static CKrnlStr*		ms_pLogDir;
 	static HANDLE			ms_hLogFile;
-	static PFILE_OBJECT		ms_pLogFileObj;
 	static LARGE_INTEGER	ms_liByteOffset;
 	static PETHREAD			ms_pEThread;
 	static BOOLEAN			ms_bCanInsertLog;
@@ -176,7 +166,7 @@ private:
 	*/
 	BOOLEAN
 		Pop(
-		__out CKrnlStr * pLog
+			__out CKrnlStr * pLog
 		);
 
 	/*
@@ -195,7 +185,7 @@ private:
 	*/
 	BOOLEAN
 		Write(
-		__in CKrnlStr * pLog
+			__in CKrnlStr * pLog
 		);
 
 	/*
@@ -213,7 +203,7 @@ private:
 	*		无
 	*/
 	BOOLEAN
-		LogFileReady();
+		CheckLogFile();
 
 	/*
 	* 函数说明：
@@ -234,16 +224,16 @@ private:
 
 	BOOLEAN
 		InitLogDir(
-		__in CKrnlStr *	pLogPath
+			__in CKrnlStr *	pLogPath
 		);
 
 	BOOLEAN
 		IsOldLogFile(
-		__in CKrnlStr * pName
+			__in CKrnlStr * pName
 		);
 
 	BOOLEAN
 		IsSameDate(
-		__in CKrnlStr * pLog
+			__in CKrnlStr * pLog
 		);
 };
