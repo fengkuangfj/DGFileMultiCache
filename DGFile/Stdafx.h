@@ -31,6 +31,7 @@
 #include "Mount.h"
 #include "OpLock.h"
 #include "Function.h"
+#include "Mdl.h"
 #include "Cleanup.h"
 #include "Close.h"
 #include "Create.h"
@@ -55,4 +56,5 @@
 #include "Event.h"
 #include "Exception.h"
 #include "Dispatch.h"
+#include "FastIo.h"
 #include "DGFile.h"

@@ -116,6 +116,7 @@
     <ClCompile Include="Dispatch.cpp" />
     <ClCompile Include="Event.cpp" />
     <ClCompile Include="Exception.cpp" />
+    <ClCompile Include="FastIo.cpp" />
     <ClCompile Include="Fcb.cpp" />
     <ClCompile Include="File.cpp" />
     <ClCompile Include="FileName.cpp" />
@@ -126,6 +127,7 @@
     <ClCompile Include="KrnlStr.cpp" />
     <ClCompile Include="LockControl.cpp" />
     <ClCompile Include="Log.cpp" />
+    <ClCompile Include="Mdl.cpp" />
     <ClCompile Include="Mount.cpp" />
     <ClCompile Include="Notification.cpp" />
     <ClCompile Include="OpLock.cpp" />
@@ -161,6 +163,7 @@
     <ClInclude Include="Dispatch.h" />
     <ClInclude Include="Event.h" />
     <ClInclude Include="Exception.h" />
+    <ClInclude Include="FastIo.h" />
     <ClInclude Include="Fcb.h" />
     <ClInclude Include="File.h" />
     <ClInclude Include="FileName.h" />
@@ -171,6 +174,7 @@
     <ClInclude Include="KrnlStr.h" />
     <ClInclude Include="LockControl.h" />
     <ClInclude Include="Log.h" />
+    <ClInclude Include="Mdl.h" />
     <ClInclude Include="Mount.h" />
     <ClInclude Include="Notification.h" />
     <ClInclude Include="OpLock.h" />

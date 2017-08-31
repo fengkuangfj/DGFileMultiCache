@@ -68,11 +68,6 @@ LONG DokanUnicodeStringChar(__in PUNICODE_STRING UnicodeString,
 	return -1;
 }
 
-VOID SetFileObjectForVCB(__in PFILE_OBJECT FileObject, __in PDokanVCB Vcb) {
-	FileObject->SectionObjectPointer = &Vcb->SectionObjectPointers;
-	FileObject->FsContext = &Vcb->VolumeFileHeader;
-}
-
 NTSTATUS
 DokanCheckShareAccess(__in PFILE_OBJECT FileObject, __in PDokanFCB FcbOrDcb,
 	__in ACCESS_MASK DesiredAccess, __in ULONG ShareAccess)
@@ -430,4 +425,253 @@ VOID FreeUnicodeString(PUNICODE_STRING UnicodeString) {
 		ExFreePool(UnicodeString->Buffer);
 		ExFreePool(UnicodeString);
 	}
+}
+
+ULONG
+PointerAlignSize(ULONG sizeInBytes) {
+	// power of 2 cheat to avoid using %
+	ULONG remainder = sizeInBytes & (sizeof(void *) - 1);
+
+	if (remainder > 0) {
+		return sizeInBytes + (sizeof(void *) - remainder);
+	}
+
+	return sizeInBytes;
+}
+
+VOID DokanPrintNTStatus(NTSTATUS Status) {
+	DDbgPrint("  status = 0x%x\n", Status);
+
+	PrintStatus(Status, STATUS_SUCCESS);
+	PrintStatus(Status, STATUS_PENDING);
+	PrintStatus(Status, STATUS_NO_MORE_FILES);
+	PrintStatus(Status, STATUS_END_OF_FILE);
+	PrintStatus(Status, STATUS_NO_SUCH_FILE);
+	PrintStatus(Status, STATUS_NOT_IMPLEMENTED);
+	PrintStatus(Status, STATUS_BUFFER_OVERFLOW);
+	PrintStatus(Status, STATUS_FILE_IS_A_DIRECTORY);
+	PrintStatus(Status, STATUS_SHARING_VIOLATION);
+	PrintStatus(Status, STATUS_OBJECT_NAME_INVALID);
+	PrintStatus(Status, STATUS_OBJECT_NAME_NOT_FOUND);
+	PrintStatus(Status, STATUS_OBJECT_NAME_COLLISION);
+	PrintStatus(Status, STATUS_OBJECT_PATH_INVALID);
+	PrintStatus(Status, STATUS_OBJECT_PATH_NOT_FOUND);
+	PrintStatus(Status, STATUS_OBJECT_PATH_SYNTAX_BAD);
+	PrintStatus(Status, STATUS_ACCESS_DENIED);
+	PrintStatus(Status, STATUS_ACCESS_VIOLATION);
+	PrintStatus(Status, STATUS_INVALID_PARAMETER);
+	PrintStatus(Status, STATUS_INVALID_USER_BUFFER);
+	PrintStatus(Status, STATUS_INVALID_HANDLE);
+	PrintStatus(Status, STATUS_INSUFFICIENT_RESOURCES);
+	PrintStatus(Status, STATUS_DEVICE_DOES_NOT_EXIST);
+	PrintStatus(Status, STATUS_INVALID_DEVICE_REQUEST);
+	PrintStatus(Status, STATUS_VOLUME_DISMOUNTED);
+}
+
+VOID PrintIdType(__in VOID *Id) {
+	if (Id == NULL) {
+		DDbgPrint("    IdType = NULL\n");
+		return;
+	}
+	switch (GetIdentifierType(Id)) {
+	case DGL:
+		DDbgPrint("    IdType = DGL\n");
+		break;
+	case DCB:
+		DDbgPrint("   IdType = DCB\n");
+		break;
+	case VCB:
+		DDbgPrint("   IdType = VCB\n");
+		break;
+	case FCB:
+		DDbgPrint("   IdType = FCB\n");
+		break;
+	case CCB:
+		DDbgPrint("   IdType = CCB\n");
+		break;
+	default:
+		DDbgPrint("   IdType = Unknown\n");
+		break;
+	}
+}
+
+BOOLEAN
+DokanNoOpAcquire(__in PVOID Fcb, __in BOOLEAN Wait) {
+	UNREFERENCED_PARAMETER(Fcb);
+	UNREFERENCED_PARAMETER(Wait);
+
+	DDbgPrint("==> DokanNoOpAcquire\n");
+
+	ASSERT(IoGetTopLevelIrp() == NULL);
+
+	IoSetTopLevelIrp((PIRP)FSRTL_CACHE_TOP_LEVEL_IRP);
+
+	DDbgPrint("<== DokanNoOpAcquire\n");
+
+	return TRUE;
+}
+
+VOID DokanNoOpRelease(__in PVOID Fcb) {
+	DDbgPrint("==> DokanNoOpRelease\n");
+	ASSERT(IoGetTopLevelIrp() == (PIRP)FSRTL_CACHE_TOP_LEVEL_IRP);
+
+	IoSetTopLevelIrp(NULL);
+
+	UNREFERENCED_PARAMETER(Fcb);
+
+	DDbgPrint("<== DokanNoOpRelease\n");
+	return;
+}
+
+VOID DokanNotifyReportChange0(__in PDokanFCB Fcb, __in PUNICODE_STRING FileName,
+	__in ULONG FilterMatch, __in ULONG Action) {
+	USHORT nameOffset;
+
+	DDbgPrint("==> DokanNotifyReportChange %wZ\n", FileName);
+
+	ASSERT(Fcb != NULL);
+	ASSERT(FileName != NULL);
+
+	// search the last "\"
+	nameOffset = (USHORT)(FileName->Length / sizeof(WCHAR) - 1);
+	for (; FileName->Buffer[nameOffset] != L'\\'; --nameOffset)
+		;
+	nameOffset++; // the next is the begining of filename
+
+	nameOffset *= sizeof(WCHAR); // Offset is in bytes
+
+	FsRtlNotifyFullReportChange(Fcb->Vcb->NotifySync, &Fcb->Vcb->DirNotifyList,
+		(PSTRING)FileName, nameOffset,
+		NULL, // StreamName
+		NULL, // NormalizedParentName
+		FilterMatch, Action,
+		NULL); // TargetContext
+
+	DDbgPrint("<== DokanNotifyReportChange\n");
+}
+
+VOID DokanNotifyReportChange(__in PDokanFCB Fcb, __in ULONG FilterMatch,
+	__in ULONG Action) {
+	ASSERT(Fcb != NULL);
+	DokanNotifyReportChange0(Fcb, &Fcb->FileName, FilterMatch, Action);
+}
+
+BOOLEAN
+DokanLookasideCreate(LOOKASIDE_LIST_EX *pCache, size_t cbElement) {
+	NTSTATUS Status = ExInitializeLookasideListEx(
+		pCache, NULL, NULL, NonPagedPool, 0, cbElement, TAG, 0);
+
+	if (!NT_SUCCESS(Status)) {
+		DDbgPrint("ExInitializeLookasideListEx failed, Status (0x%x)", Status);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+NTSTATUS
+DokanGetAccessToken(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp) {
+	KIRQL oldIrql = 0;
+	PLIST_ENTRY thisEntry, nextEntry, listHead;
+	PIRP_ENTRY irpEntry;
+	PDokanVCB vcb;
+	PEVENT_INFORMATION eventInfo;
+	PACCESS_TOKEN accessToken;
+	NTSTATUS status = STATUS_INVALID_PARAMETER;
+	HANDLE handle;
+	PIO_STACK_LOCATION irpSp = NULL;
+	BOOLEAN hasLock = FALSE;
+	ULONG outBufferLen;
+	ULONG inBufferLen;
+	PACCESS_STATE accessState = NULL;
+
+	DDbgPrint("==> DokanGetAccessToken\n");
+	vcb = (PDokanVCB)DeviceObject->DeviceExtension;
+
+	__try {
+		eventInfo = (PEVENT_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
+		ASSERT(eventInfo != NULL);
+
+		if (Irp->RequestorMode != UserMode) {
+			DDbgPrint("  needs to be called from user-mode\n");
+			status = STATUS_INVALID_PARAMETER;
+			__leave;
+		}
+
+		if (GetIdentifierType(vcb) != VCB) {
+			DDbgPrint("  GetIdentifierType != VCB\n");
+			status = STATUS_INVALID_PARAMETER;
+			__leave;
+		}
+
+		irpSp = IoGetCurrentIrpStackLocation(Irp);
+		outBufferLen = irpSp->Parameters.DeviceIoControl.OutputBufferLength;
+		inBufferLen = irpSp->Parameters.DeviceIoControl.InputBufferLength;
+		if (outBufferLen != sizeof(EVENT_INFORMATION) ||
+			inBufferLen != sizeof(EVENT_INFORMATION)) {
+			DDbgPrint("  wrong input or output buffer length\n");
+			status = STATUS_INVALID_PARAMETER;
+			__leave;
+		}
+
+		ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+		KeAcquireSpinLock(&vcb->Dcb->PendingIrp.ListLock, &oldIrql);
+		hasLock = TRUE;
+
+		// search corresponding IRP through pending IRP list
+		listHead = &vcb->Dcb->PendingIrp.ListHead;
+
+		for (thisEntry = listHead->Flink; thisEntry != listHead;
+			thisEntry = nextEntry) {
+
+			nextEntry = thisEntry->Flink;
+
+			irpEntry = CONTAINING_RECORD(thisEntry, IRP_ENTRY, ListEntry);
+
+			if (irpEntry->SerialNumber != eventInfo->SerialNumber) {
+				continue;
+			}
+
+			// this irp must be IRP_MJ_CREATE
+			if (irpEntry->IrpSp->Parameters.Create.SecurityContext) {
+				accessState =
+					irpEntry->IrpSp->Parameters.Create.SecurityContext->AccessState;
+			}
+			break;
+		}
+		KeReleaseSpinLock(&vcb->Dcb->PendingIrp.ListLock, oldIrql);
+		hasLock = FALSE;
+
+		if (accessState == NULL) {
+			DDbgPrint("  can't find pending Irp: %d\n", eventInfo->SerialNumber);
+			__leave;
+		}
+
+		accessToken =
+			SeQuerySubjectContextToken(&accessState->SubjectSecurityContext);
+		if (accessToken == NULL) {
+			DDbgPrint("  accessToken == NULL\n");
+			__leave;
+		}
+		// NOTE: Accessing *SeTokenObjectType while acquring sping lock causes
+		// BSOD on Windows XP.
+		status = ObOpenObjectByPointer(accessToken, 0, NULL, GENERIC_ALL,
+			*SeTokenObjectType, KernelMode, &handle);
+		if (!NT_SUCCESS(status)) {
+			DDbgPrint("  ObOpenObjectByPointer failed: 0x%x\n", status);
+			__leave;
+		}
+
+		eventInfo->Operation.AccessToken.Handle = handle;
+		Irp->IoStatus.Information = sizeof(EVENT_INFORMATION);
+		status = STATUS_SUCCESS;
+
+	}
+	__finally {
+		if (hasLock) {
+			KeReleaseSpinLock(&vcb->Dcb->PendingIrp.ListLock, oldIrql);
+		}
+	}
+	DDbgPrint("<== DokanGetAccessToken\n");
+	return status;
 }

@@ -24,6 +24,7 @@ SOURCES=Stdafx.cpp \
 		Mount.cpp \
 		OpLock.cpp \
 		Function.cpp \
+		Mdl.cpp \
         Cleanup.cpp \
         Close.cpp \
         Create.cpp \
@@ -48,5 +49,6 @@ SOURCES=Stdafx.cpp \
 		Event.cpp \
 		Exception.cpp \
 		Dispatch.cpp \
+		FastIo.cpp \
 		DGFile.cpp \
         DGFile.rc

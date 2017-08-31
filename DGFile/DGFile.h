@@ -138,8 +138,6 @@ extern NPAGED_LOOKASIDE_LIST DokanIrpEntryLookasideList;
 #define DokanGetFcbOplock(F) &(F)->Oplock
 #endif
 
-
-
 typedef struct _DRIVER_EVENT_CONTEXT {
 	LIST_ENTRY ListEntry;
 	PKEVENT Completed;
@@ -148,76 +146,10 @@ typedef struct _DRIVER_EVENT_CONTEXT {
 
 extern "C" DRIVER_INITIALIZE DriverEntry;
 
-
-
-
-DRIVER_UNLOAD DokanUnload;
-
-DRIVER_CANCEL DokanEventCancelRoutine;
-
-DRIVER_CANCEL DokanIrpCancelRoutine;
-
-
-
-DRIVER_DISPATCH DokanRegisterPendingIrpForEvent;
-
-DRIVER_DISPATCH DokanRegisterPendingIrpForService;
-
-DRIVER_DISPATCH DokanCompleteIrp;
-
-DRIVER_DISPATCH DokanResetPendingIrpTimeout;
-
-DRIVER_DISPATCH DokanGetAccessToken;
-
-
-
-DRIVER_DISPATCH DokanEventStart;
-
-DRIVER_DISPATCH DokanEventWrite;
-
-
-
-VOID DokanOplockComplete(IN PVOID Context, IN PIRP Irp);
-
-
-
-VOID DokanNoOpRelease(__in PVOID Fcb);
-
-BOOLEAN
-DokanNoOpAcquire(__in PVOID Fcb, __in BOOLEAN Wait);
-
-
-
-VOID DokanInitVpb(__in PVPB Vpb, __in PDEVICE_OBJECT VolumeDevice);
-
-VOID DokanPrintNTStatus(NTSTATUS Status);
-
-NTSTATUS DokanRegisterUncProviderSystem(PDokanDCB dcb);
-
-
-VOID DokanNotifyReportChange0(__in PDokanFCB Fcb, __in PUNICODE_STRING FileName,
-	__in ULONG FilterMatch, __in ULONG Action);
-
-VOID DokanNotifyReportChange(__in PDokanFCB Fcb, __in ULONG FilterMatch,
-	__in ULONG Action);
-
-
-
-VOID PrintIdType(__in VOID *Id);
-
-NTSTATUS
-DokanAllocateMdl(__in PIRP Irp, __in ULONG Length);
-
-VOID DokanFreeMdl(__in PIRP Irp);
-
-PUNICODE_STRING
-DokanAllocateUnicodeString(__in PCWSTR String);
-
-ULONG
-PointerAlignSize(ULONG sizeInBytes);
-
-
-NTSTATUS DokanSendVolumeArrivalNotification(PUNICODE_STRING DeviceName);
-
 static UNICODE_STRING sddl = RTL_CONSTANT_STRING(
 	L"D:P(A;;GA;;;SY)(A;;GRGWGX;;;BA)(A;;GRGWGX;;;WD)(A;;GRGX;;;RC)");
+
+NTSTATUS
+DriverEntry(__in PDRIVER_OBJECT DriverObject, __in PUNICODE_STRING RegistryPath);
+
+VOID DokanUnload(__in PDRIVER_OBJECT DriverObject);

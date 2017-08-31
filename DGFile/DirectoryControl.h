@@ -3,10 +3,6 @@
 
 #define DIRECTORY_CONTROL_TAG 'OCID' // DICO
 
-
-
-
-
 NTSTATUS
 DokanDispatchDirectoryControl(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp);
 

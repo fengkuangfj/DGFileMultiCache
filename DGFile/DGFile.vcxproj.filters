@@ -156,6 +156,12 @@
     <ClCompile Include="Unc.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Mdl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="FastIo.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DGFile.h">
@@ -288,6 +294,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Unc.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Mdl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="FastIo.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
