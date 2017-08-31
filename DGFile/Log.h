@@ -13,7 +13,7 @@ CopyRight (C) 2017 - 2017 杭州华途软件有限公司
 
 #pragma once
 
-#define LOG_TAG	'GOL'
+#define LOG_TAG	'TGOL' // LOGT
 
 #define	EVERY_TIME_LOG_MAX_COUNT	1
 #define MAX_LOG_FILE_SIZE			(9 * 1024 * 1024)

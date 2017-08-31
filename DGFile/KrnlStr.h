@@ -13,7 +13,7 @@ CopyRight (C) 2017 - 2017 杭州华途软件有限公司
 
 #pragma once
 
-#define KRNLSTR_TAG 'TSNK'
+#define KRNLSTR_TAG 'TSRK' // KRST
 
 /*
 * UNICODE_STRING封装类

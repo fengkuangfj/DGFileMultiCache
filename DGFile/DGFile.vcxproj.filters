@@ -51,6 +51,96 @@
     <ClCompile Include="Create.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Dispatch.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Ccb.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Fcb.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Dcb.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Vcb.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Cleanup.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Close.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Communication.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DeviceControl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectoryControl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="FileSystemControl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="LockControl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Pnp.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="QueryInformation.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="QuerySerurity.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="QueryVolumeInformation.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Read.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SetInformation.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SetSecurity.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SetVolumeInformation.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Shutdown.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Write.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="FlushBuffers.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Event.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Irp.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Device.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Notification.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Mount.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Timeout.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Exception.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DGFile.h">
@@ -77,7 +167,97 @@
     <ClInclude Include="Create.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="PublicStruct.h">
+    <ClInclude Include="Dispatch.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Ccb.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Fcb.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Dcb.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Vcb.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Cleanup.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Close.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Communication.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DeviceControl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectoryControl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="FileSystemControl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="LockControl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Pnp.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="QueryInformation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="QuerySerurity.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="QueryVolumeInformation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Read.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SetInformation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SetSecurity.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SetVolumeInformation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Shutdown.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Write.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="FlushBuffers.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Struct.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Event.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Irp.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Device.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Notification.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Mount.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Timeout.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Exception.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,25 +1,52 @@
 
 #pragma once
 
-// #include <Wdm.h>
 #include <Ntifs.h>
-#include <Wdmsec.h>
+#include <ntdddisk.h>
+#include <initguid.h>
+#include <mountdev.h>
+#include <mountmgr.h>
+#include <ntddvol.h>
+#include <storduid.h>
+#include <ntddstor.h>
+#include <wdmsec.h>
 
-// #pragma warning(push)
-// #pragma warning(disable : 4201)
-// #include <ntdef.h>
-// #pragma warning(pop)
-// 
-// #include <ntstatus.h>
-// 
 #define NTSTRSAFE_NO_DEPRECATE
 #include <Ntstrsafe.h>
 
 #include "Public.h"
-#include "PublicStruct.h"
 #include "KrnlStr.h"
+#include "Struct.h"
 #include "FileName.h"
 #include "File.h"
 #include "Log.h"
+#include "Dcb.h"
+#include "Vcb.h"
+#include "Fcb.h"
+#include "Ccb.h"
+#include "Device.h"
+#include "Cleanup.h"
+#include "Close.h"
 #include "Create.h"
+#include "DeviceControl.h"
+#include "DirectoryControl.h"
+#include "FileSystemControl.h"
+#include "FlushBuffers.h"
+#include "LockControl.h"
+#include "Pnp.h"
+#include "QueryInformation.h"
+#include "QuerySerurity.h"
+#include "QueryVolumeInformation.h"
+#include "Read.h"
+#include "SetInformation.h"
+#include "SetSecurity.h"
+#include "SetVolumeInformation.h"
+#include "Shutdown.h"
+#include "Write.h"
+#include "Irp.h"
+#include "Notification.h"
+#include "Timeout.h"
+#include "Event.h"
+#include "Exception.h"
+#include "Dispatch.h"
 #include "DGFile.h"

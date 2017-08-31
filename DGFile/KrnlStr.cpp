@@ -11,7 +11,7 @@ CopyRight (C) 2017 - 2017 杭州华途软件有限公司
 
 --*/
 
-#include "stdafx.h"
+#include "Stdafx.h"
 #include "KrnlStr.h"
 
 #pragma warning(disable : 4127)

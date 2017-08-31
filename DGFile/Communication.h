@@ -13,6 +13,8 @@ CopyRight (C) 2017 - 2017 杭州华途软件有限公司
 
 #pragma once
 
+#define COMMUNICATION_TAG 'MMOC' // COMM
+
 typedef struct _COMM_INFO
 {
 	PFLT_PORT		pSeverPort;		// 端口

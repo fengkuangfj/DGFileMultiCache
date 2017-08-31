@@ -13,6 +13,34 @@ SOURCES=Stdafx.cpp \
 		FileName.cpp \
 		File.cpp \
 		Log.cpp \
-		Create.cpp \
+		Dcb.cpp \
+		Vcb.cpp \
+		Fcb.cpp \
+		Ccb.cpp \
+		Device.cpp \
+        Cleanup.cpp \
+        Close.cpp \
+        Create.cpp \
+        DeviceControl.cpp \
+        DirectoryControl.cpp \
+        FileSystemControl.cpp \
+        FlushBuffers.cpp \
+        LockControl.cpp \
+        Pnp.cpp \
+        QueryInformation.cpp \
+        QuerySerurity.cpp \
+        QueryVolumeInformation.cpp \
+        Read.cpp \
+        SetInformation.cpp \
+        SetSecurity.cpp \
+        SetVolumeInformation.cpp \
+		Shutdown.cpp \
+        Write.cpp \
+		Irp.cpp \
+		Notification.cpp \
+		Timeout.cpp \
+		Event.cpp \
+		Exception.cpp \
+		Dispatch.cpp \
 		DGFile.cpp \
         DGFile.rc

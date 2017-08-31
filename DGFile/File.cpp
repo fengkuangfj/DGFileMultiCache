@@ -11,7 +11,7 @@ CopyRight (C) 2017 - 2017 杭州华途软件有限公司
 
 --*/
 
-#include "stdafx.h"
+#include "Stdafx.h"
 #include "File.h"
 
 #pragma warning(disable : 4509)
@@ -555,12 +555,12 @@ CFile::InitPassthroughPathEndsWithList()
 			__leave;
 		}
 
-		bRet = CDGFile::InitList(
-			&Key,
-			&Value,
-			&ms_pPassthroughPathEndsWithList,
-			&ms_ulPassthroughPathEndsWithCount
-		);
+// 		bRet = CDGFile::InitList(
+// 			&Key,
+// 			&Value,
+// 			&ms_pPassthroughPathEndsWithList,
+// 			&ms_ulPassthroughPathEndsWithCount
+// 		);
 	}
 	__finally
 	{
@@ -593,12 +593,12 @@ CFile::InitPassthroughPathContainsList()
 			__leave;
 		}
 
-		bRet = CDGFile::InitList(
-			&Key,
-			&Value,
-			&ms_pPassthroughPathContainsList,
-			&ms_ulPassthroughPathContainsCount
-		);
+// 		bRet = CDGFile::InitList(
+// 			&Key,
+// 			&Value,
+// 			&ms_pPassthroughPathContainsList,
+// 			&ms_ulPassthroughPathContainsCount
+// 		);
 	}
 	__finally
 	{

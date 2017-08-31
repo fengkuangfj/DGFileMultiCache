@@ -13,6 +13,8 @@ CopyRight (C) 2017 - 2017 杭州华途软件有限公司
 
 #pragma once
 
+#define FILE_NAME_TAG 'ANIF' // FINA
+
 class CFileName
 {
 public:
