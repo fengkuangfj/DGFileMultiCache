@@ -151,18 +151,13 @@ extern "C" DRIVER_INITIALIZE DriverEntry;
 
 
 
-NTSTATUS
-QueryDeviceRelations(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp);
-
 DRIVER_UNLOAD DokanUnload;
 
 DRIVER_CANCEL DokanEventCancelRoutine;
 
 DRIVER_CANCEL DokanIrpCancelRoutine;
 
-VOID DokanOplockComplete(IN PVOID Context, IN PIRP Irp);
 
-VOID DokanPrePostIrp(IN PVOID Context, IN PIRP Irp);
 
 DRIVER_DISPATCH DokanRegisterPendingIrpForEvent;
 
@@ -174,25 +169,7 @@ DRIVER_DISPATCH DokanResetPendingIrpTimeout;
 
 DRIVER_DISPATCH DokanGetAccessToken;
 
-NTSTATUS
-DokanGetMountPointList(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp,
-	__in PDOKAN_GLOBAL dokanGlobal);
 
-NTSTATUS
-DokanDispatchRequest(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp);
-
-NTSTATUS
-DokanEventRelease(__in PDEVICE_OBJECT DeviceObject);
-
-NTSTATUS
-DokanGlobalEventRelease(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp);
-
-NTSTATUS
-DokanExceptionFilter(__in PIRP Irp, __in PEXCEPTION_POINTERS ExceptionPointer);
-
-NTSTATUS
-DokanExceptionHandler(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp,
-	__in NTSTATUS ExceptionCode);
 
 DRIVER_DISPATCH DokanEventStart;
 
@@ -200,13 +177,7 @@ DRIVER_DISPATCH DokanEventWrite;
 
 
 
-
-NTSTATUS
-DokanRegisterPendingIrp(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp,
-	__in PEVENT_CONTEXT EventContext, __in ULONG Flags);
-
-VOID DokanEventNotification(__in PIRP_LIST NotifyEvent,
-	__in PEVENT_CONTEXT EventContext);
+VOID DokanOplockComplete(IN PVOID Context, IN PIRP Irp);
 
 
 
@@ -218,14 +189,11 @@ DokanNoOpAcquire(__in PVOID Fcb, __in BOOLEAN Wait);
 
 
 VOID DokanInitVpb(__in PVPB Vpb, __in PDEVICE_OBJECT VolumeDevice);
-VOID DokanDeleteDeviceObject(__in PDokanDCB Dcb);
-NTSTATUS IsMountPointDriveLetter(__in PUNICODE_STRING mountPoint);
-VOID DokanDeleteMountPoint(__in PDokanDCB Dcb);
+
 VOID DokanPrintNTStatus(NTSTATUS Status);
 
 NTSTATUS DokanRegisterUncProviderSystem(PDokanDCB dcb);
-VOID DokanCompleteIrpRequest(__in PIRP Irp, __in NTSTATUS Status,
-	__in ULONG_PTR Info);
+
 
 VOID DokanNotifyReportChange0(__in PDokanFCB Fcb, __in PUNICODE_STRING FileName,
 	__in ULONG FilterMatch, __in ULONG Action);
@@ -233,37 +201,7 @@ VOID DokanNotifyReportChange0(__in PDokanFCB Fcb, __in PUNICODE_STRING FileName,
 VOID DokanNotifyReportChange(__in PDokanFCB Fcb, __in ULONG FilterMatch,
 	__in ULONG Action);
 
-PDokanFCB DokanAllocateFCB(__in PDokanVCB Vcb);
 
-NTSTATUS
-DokanFreeFCB(__in PDokanFCB Fcb);
-
-PDokanCCB DokanAllocateCCB(__in PDokanDCB Dcb, __in PDokanFCB Fcb);
-
-NTSTATUS
-DokanFreeCCB(__in PDokanCCB Ccb);
-
-NTSTATUS
-DokanStartCheckThread(__in PDokanDCB Dcb);
-
-VOID DokanStopCheckThread(__in PDokanDCB Dcb);
-
-BOOLEAN
-DokanCheckCCB(__in PDokanDCB Dcb, __in_opt PDokanCCB Ccb);
-
-VOID DokanInitIrpList(__in PIRP_LIST IrpList);
-
-
-
-VOID DokanStopEventNotificationThread(__in PDokanDCB Dcb);
-
-VOID DokanUpdateTimeout(__out PLARGE_INTEGER KickCount, __in ULONG Timeout);
-
-VOID DokanUnmount(__in PDokanDCB Dcb);
-
-PMOUNT_ENTRY
-FindMountEntry(__in PDOKAN_GLOBAL dokanGlobal,
-	__out PDOKAN_CONTROL DokanControl);
 
 VOID PrintIdType(__in VOID *Id);
 
@@ -278,7 +216,7 @@ DokanAllocateUnicodeString(__in PCWSTR String);
 ULONG
 PointerAlignSize(ULONG sizeInBytes);
 
-VOID DokanCreateMountPoint(__in PDokanDCB Dcb);
+
 NTSTATUS DokanSendVolumeArrivalNotification(PUNICODE_STRING DeviceName);
 
 static UNICODE_STRING sddl = RTL_CONSTANT_STRING(

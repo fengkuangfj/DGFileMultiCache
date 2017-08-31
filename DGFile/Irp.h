@@ -3,8 +3,6 @@
 
 #define IRP_TAG 'TPRI' // IRPT
 
-
-
 VOID DokanIrpCancelRoutine(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp);
 
 VOID DokanPrePostIrp(IN PVOID Context, IN PIRP Irp);
@@ -26,6 +24,12 @@ NTSTATUS
 DokanRegisterPendingIrpForService(__in PDEVICE_OBJECT DeviceObject,
 	__in PIRP Irp);
 
-
 NTSTATUS
 DokanCompleteIrp(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp);
+
+VOID DokanInitIrpList(__in PIRP_LIST IrpList);
+
+VOID DokanCompleteIrpRequest(__in PIRP Irp, __in NTSTATUS Status,
+	__in ULONG_PTR Info);
+
+VOID ReleasePendingIrp(__in PIRP_LIST PendingIrp);

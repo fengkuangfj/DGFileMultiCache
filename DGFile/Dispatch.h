@@ -3,8 +3,6 @@
 
 #define DISPATCH_TAG 'PSID' // DISP
 
-
-
 __drv_dispatchType(IRP_MJ_CREATE) __drv_dispatchType(IRP_MJ_CLOSE)
 __drv_dispatchType(IRP_MJ_READ) __drv_dispatchType(IRP_MJ_WRITE)
 __drv_dispatchType(IRP_MJ_FLUSH_BUFFERS) __drv_dispatchType(
@@ -20,6 +18,10 @@ __drv_dispatchType(IRP_MJ_FLUSH_BUFFERS) __drv_dispatchType(
 	__drv_dispatchType(IRP_MJ_LOCK_CONTROL)
 	__drv_dispatchType(IRP_MJ_QUERY_SECURITY)
 	__drv_dispatchType(
-		IRP_MJ_SET_SECURITY) NTSTATUS
+		IRP_MJ_SET_SECURITY)
+
+	NTSTATUS
 	DokanBuildRequest(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp);
 
+NTSTATUS
+DokanDispatchRequest(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp);

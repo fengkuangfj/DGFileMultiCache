@@ -58,65 +58,8 @@ DokanCompleteRead
 
 */
 
-
 #include "Stdafx.h"
 #include "Notification.h"
-
-
-VOID SetCommonEventContext(__in PDokanDCB Dcb, __in PEVENT_CONTEXT EventContext,
-	__in PIRP Irp, __in_opt PDokanCCB Ccb) {
-	PIO_STACK_LOCATION irpSp;
-
-	irpSp = IoGetCurrentIrpStackLocation(Irp);
-
-	EventContext->MountId = Dcb->MountId;
-	EventContext->MajorFunction = irpSp->MajorFunction;
-	EventContext->MinorFunction = irpSp->MinorFunction;
-	EventContext->Flags = irpSp->Flags;
-
-	if (Ccb) {
-		EventContext->FileFlags = Ccb->Flags;
-	}
-
-	EventContext->ProcessId = IoGetRequestorProcessId(Irp);
-}
-
-PEVENT_CONTEXT
-AllocateEventContextRaw(__in ULONG EventContextLength) {
-	ULONG driverContextLength;
-	PDRIVER_EVENT_CONTEXT driverEventContext;
-	PEVENT_CONTEXT eventContext;
-
-	driverContextLength =
-		EventContextLength - sizeof(EVENT_CONTEXT) + sizeof(DRIVER_EVENT_CONTEXT);
-	driverEventContext = (PDRIVER_EVENT_CONTEXT)ExAllocatePool(driverContextLength);
-
-	if (driverEventContext == NULL) {
-		return NULL;
-	}
-
-	RtlZeroMemory(driverEventContext, driverContextLength);
-	InitializeListHead(&driverEventContext->ListEntry);
-
-	eventContext = &driverEventContext->EventContext;
-	eventContext->Length = EventContextLength;
-
-	return eventContext;
-}
-
-PEVENT_CONTEXT
-AllocateEventContext(__in PDokanDCB Dcb, __in PIRP Irp,
-	__in ULONG EventContextLength, __in_opt PDokanCCB Ccb) {
-	PEVENT_CONTEXT eventContext;
-	eventContext = AllocateEventContextRaw(EventContextLength);
-	if (eventContext == NULL) {
-		return NULL;
-	}
-	SetCommonEventContext(Dcb, eventContext, Irp, Ccb);
-	eventContext->SerialNumber = InterlockedIncrement((LONG *)&Dcb->SerialNumber);
-
-	return eventContext;
-}
 
 VOID DokanFreeEventContext(__in PEVENT_CONTEXT EventContext) {
 	PDRIVER_EVENT_CONTEXT driverEventContext =
@@ -140,50 +83,6 @@ VOID DokanEventNotification(__in PIRP_LIST NotifyEvent,
 		&NotifyEvent->ListLock);
 
 	KeSetEvent(&NotifyEvent->NotEmpty, IO_NO_INCREMENT, FALSE);
-}
-
-VOID ReleasePendingIrp(__in PIRP_LIST PendingIrp) {
-	PLIST_ENTRY listHead;
-	LIST_ENTRY completeList;
-	PIRP_ENTRY irpEntry;
-	KIRQL oldIrql;
-	PIRP irp;
-
-	InitializeListHead(&completeList);
-
-	ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
-	KeAcquireSpinLock(&PendingIrp->ListLock, &oldIrql);
-
-	while (!IsListEmpty(&PendingIrp->ListHead)) {
-		listHead = RemoveHeadList(&PendingIrp->ListHead);
-		irpEntry = CONTAINING_RECORD(listHead, IRP_ENTRY, ListEntry);
-		irp = irpEntry->Irp;
-		if (irp == NULL) {
-			// this IRP has already been canceled
-			ASSERT(irpEntry->CancelRoutineFreeMemory == FALSE);
-			DokanFreeIrpEntry(irpEntry);
-			continue;
-		}
-
-		if (IoSetCancelRoutine(irp, NULL) == NULL) {
-			// Cancel routine will run as soon as we release the lock
-			InitializeListHead(&irpEntry->ListEntry);
-			irpEntry->CancelRoutineFreeMemory = TRUE;
-			continue;
-		}
-		InsertTailList(&completeList, &irpEntry->ListEntry);
-	}
-
-	KeClearEvent(&PendingIrp->NotEmpty);
-	KeReleaseSpinLock(&PendingIrp->ListLock, oldIrql);
-
-	while (!IsListEmpty(&completeList)) {
-		listHead = RemoveHeadList(&completeList);
-		irpEntry = CONTAINING_RECORD(listHead, IRP_ENTRY, ListEntry);
-		irp = irpEntry->Irp;
-		DokanFreeIrpEntry(irpEntry);
-		DokanCompleteIrpRequest(irp, STATUS_SUCCESS, 0);
-	}
 }
 
 VOID ReleaseNotifyEvent(__in PIRP_LIST NotifyEvent) {
@@ -324,7 +223,6 @@ VOID NotificationLoop(__in PIRP_LIST PendingIrp, __in PIRP_LIST NotifyEvent) {
 	DDbgPrint("<= NotificationLoop\n");
 }
 
-//KSTART_ROUTINE NotificationThread;
 VOID NotificationThread(__in PDokanDCB Dcb) {
 	PKEVENT events[5];
 	PKWAIT_BLOCK waitBlock;

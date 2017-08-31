@@ -401,23 +401,6 @@ VOID DokanPrintNTStatus(NTSTATUS Status) {
 	PrintStatus(Status, STATUS_VOLUME_DISMOUNTED);
 }
 
-VOID DokanCompleteIrpRequest(__in PIRP Irp, __in NTSTATUS Status,
-	__in ULONG_PTR Info) {
-	if (Irp == NULL) {
-		DDbgPrint("  Irp is NULL, so no complete required\n");
-		return;
-	}
-	if (Status == -1) {
-		DDbgPrint("  Status is -1 which is not valid NTSTATUS\n");
-		Status = STATUS_INVALID_PARAMETER;
-	}
-	if (Status != STATUS_PENDING) {
-		Irp->IoStatus.Status = Status;
-		Irp->IoStatus.Information = Info;
-		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-	}
-	DokanPrintNTStatus(Status);
-}
 
 VOID DokanNotifyReportChange0(__in PDokanFCB Fcb, __in PUNICODE_STRING FileName,
 	__in ULONG FilterMatch, __in ULONG Action) {
@@ -479,32 +462,7 @@ VOID PrintIdType(__in VOID *Id) {
 	}
 }
 
-BOOLEAN
-DokanCheckCCB(__in PDokanDCB Dcb, __in_opt PDokanCCB Ccb) {
-	ASSERT(Dcb != NULL);
-	if (GetIdentifierType(Dcb) != DCB) {
-		PrintIdType(Dcb);
-		return FALSE;
-	}
 
-	if (Ccb == NULL || Ccb == 0) {
-		PrintIdType(Dcb);
-		DDbgPrint("   ccb is NULL\n");
-		return FALSE;
-	}
-
-	if (Ccb->MountId != Dcb->MountId) {
-		DDbgPrint("   MountId is different\n");
-		return FALSE;
-	}
-
-	if (!Dcb->Mounted) {
-		DDbgPrint("  Not mounted\n");
-		return FALSE;
-	}
-
-	return TRUE;
-}
 
 NTSTATUS
 DokanAllocateMdl(__in PIRP Irp, __in ULONG Length) {

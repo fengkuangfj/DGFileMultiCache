@@ -22,7 +22,6 @@ with this program. If not, see <http://www.gnu.org/licenses/>.
 #include "Stdafx.h"
 #include "SetSecurity.h"
 
-
 NTSTATUS
 DokanDispatchSetSecurity(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp) {
 	PIO_STACK_LOCATION irpSp;

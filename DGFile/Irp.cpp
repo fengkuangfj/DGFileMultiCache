@@ -2,7 +2,6 @@
 #include "Stdafx.h"
 #include "Irp.h"
 
-
 VOID DokanIrpCancelRoutine(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp) {
 	KIRQL oldIrql;
 	PIRP_ENTRY irpEntry;
@@ -373,4 +372,72 @@ DokanCompleteIrp(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp) {
 
 	// TODO: should return error
 	return STATUS_SUCCESS;
+}
+
+VOID ReleasePendingIrp(__in PIRP_LIST PendingIrp) {
+	PLIST_ENTRY listHead;
+	LIST_ENTRY completeList;
+	PIRP_ENTRY irpEntry;
+	KIRQL oldIrql;
+	PIRP irp;
+
+	InitializeListHead(&completeList);
+
+	ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+	KeAcquireSpinLock(&PendingIrp->ListLock, &oldIrql);
+
+	while (!IsListEmpty(&PendingIrp->ListHead)) {
+		listHead = RemoveHeadList(&PendingIrp->ListHead);
+		irpEntry = CONTAINING_RECORD(listHead, IRP_ENTRY, ListEntry);
+		irp = irpEntry->Irp;
+		if (irp == NULL) {
+			// this IRP has already been canceled
+			ASSERT(irpEntry->CancelRoutineFreeMemory == FALSE);
+			DokanFreeIrpEntry(irpEntry);
+			continue;
+		}
+
+		if (IoSetCancelRoutine(irp, NULL) == NULL) {
+			// Cancel routine will run as soon as we release the lock
+			InitializeListHead(&irpEntry->ListEntry);
+			irpEntry->CancelRoutineFreeMemory = TRUE;
+			continue;
+		}
+		InsertTailList(&completeList, &irpEntry->ListEntry);
+	}
+
+	KeClearEvent(&PendingIrp->NotEmpty);
+	KeReleaseSpinLock(&PendingIrp->ListLock, oldIrql);
+
+	while (!IsListEmpty(&completeList)) {
+		listHead = RemoveHeadList(&completeList);
+		irpEntry = CONTAINING_RECORD(listHead, IRP_ENTRY, ListEntry);
+		irp = irpEntry->Irp;
+		DokanFreeIrpEntry(irpEntry);
+		DokanCompleteIrpRequest(irp, STATUS_SUCCESS, 0);
+	}
+}
+
+VOID DokanInitIrpList(__in PIRP_LIST IrpList) {
+	InitializeListHead(&IrpList->ListHead);
+	KeInitializeSpinLock(&IrpList->ListLock);
+	KeInitializeEvent(&IrpList->NotEmpty, NotificationEvent, FALSE);
+}
+
+VOID DokanCompleteIrpRequest(__in PIRP Irp, __in NTSTATUS Status,
+	__in ULONG_PTR Info) {
+	if (Irp == NULL) {
+		DDbgPrint("  Irp is NULL, so no complete required\n");
+		return;
+	}
+	if (Status == -1) {
+		DDbgPrint("  Status is -1 which is not valid NTSTATUS\n");
+		Status = STATUS_INVALID_PARAMETER;
+	}
+	if (Status != STATUS_PENDING) {
+		Irp->IoStatus.Status = Status;
+		Irp->IoStatus.Information = Info;
+		IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	}
+	DokanPrintNTStatus(Status);
 }

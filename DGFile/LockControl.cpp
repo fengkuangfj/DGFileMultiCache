@@ -2,8 +2,6 @@
 #include "Stdafx.h"
 #include "LockControl.h"
 
-
-
 VOID DokanCompleteLock(__in PIRP_ENTRY IrpEntry,
 	__in PEVENT_INFORMATION EventInfo) {
 	PIRP irp;
@@ -18,7 +16,6 @@ VOID DokanCompleteLock(__in PIRP_ENTRY IrpEntry,
 
 	DDbgPrint("<== DokanCompleteLock\n");
 }
-
 
 NTSTATUS
 DokanDispatchLock(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp) {
@@ -129,7 +126,6 @@ DokanDispatchLock(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp) {
 
 	return status;
 }
-
 
 NTSTATUS
 DokanCommonLockControl(__in PIRP Irp, __in PEVENT_CONTEXT EventContext) {

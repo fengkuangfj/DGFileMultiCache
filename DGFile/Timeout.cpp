@@ -22,70 +22,8 @@ You should have received a copy of the GNU Lesser General Public License along
 with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #include "Stdafx.h"
 #include "Timeout.h"
-VOID DokanUnmount(__in PDokanDCB Dcb) {
-	ULONG eventLength;
-	PEVENT_CONTEXT eventContext;
-	PDRIVER_EVENT_CONTEXT driverEventContext;
-	PKEVENT completedEvent;
-	LARGE_INTEGER timeout;
-	PDokanVCB vcb = (PDokanVCB)Dcb->Vcb;
-	ULONG deviceNamePos;
-
-	DDbgPrint("==> DokanUnmount\n");
-
-	eventLength = sizeof(EVENT_CONTEXT);
-	eventContext = AllocateEventContextRaw(eventLength);
-
-	if (eventContext == NULL) {
-		; // STATUS_INSUFFICIENT_RESOURCES;
-		DDbgPrint(" Not able to allocate eventContext.\n");
-		if (vcb) {
-			DokanEventRelease(vcb->DeviceObject);
-		}
-		return;
-	}
-
-	driverEventContext =
-		CONTAINING_RECORD(eventContext, DRIVER_EVENT_CONTEXT, EventContext);
-	completedEvent = (PKEVENT)ExAllocatePool(sizeof(KEVENT));
-	if (completedEvent) {
-		KeInitializeEvent(completedEvent, NotificationEvent, FALSE);
-		driverEventContext->Completed = completedEvent;
-	}
-
-	deviceNamePos = Dcb->SymbolicLinkName->Length / sizeof(WCHAR) - 1;
-	for (; Dcb->SymbolicLinkName->Buffer[deviceNamePos] != L'\\'; --deviceNamePos)
-		;
-	RtlStringCchCopyW(eventContext->Operation.Unmount.DeviceName,
-		sizeof(eventContext->Operation.Unmount.DeviceName) /
-		sizeof(WCHAR),
-		&(Dcb->SymbolicLinkName->Buffer[deviceNamePos]));
-
-	DDbgPrint("  Send Unmount to Service : %ws\n",
-		eventContext->Operation.Unmount.DeviceName);
-
-	DokanEventNotification(&Dcb->Global->NotifyService, eventContext);
-
-	if (completedEvent) {
-		timeout.QuadPart = -1 * 10 * 1000 * 10; // 10 sec
-		KeWaitForSingleObject(completedEvent, Executive, KernelMode, FALSE,
-			&timeout);
-	}
-
-	if (vcb) {
-		DokanEventRelease(vcb->DeviceObject);
-	}
-
-	if (completedEvent) {
-		ExFreePool(completedEvent);
-	}
-
-	DDbgPrint("<== DokanUnmount\n");
-}
-
 VOID DokanCheckKeepAlive(__in PDokanDCB Dcb) {
 	LARGE_INTEGER tickCount;
 	ULONG mounted;
@@ -250,7 +188,6 @@ DokanResetPendingIrpTimeout(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp) {
 	return STATUS_SUCCESS;
 }
 
-//KSTART_ROUTINE DokanTimeoutThread;
 VOID DokanTimeoutThread(PDokanDCB Dcb)
 /*++
 

@@ -3,7 +3,6 @@
 
 #define EVENT_TAG 'NEVE' // EVEN
 
-
 PEVENT_CONTEXT
 AllocateEventContextRaw(__in ULONG EventContextLength);
 
@@ -13,10 +12,13 @@ AllocateEventContext(__in PDokanDCB Dcb, __in PIRP Irp,
 
 VOID DokanFreeEventContext(__in PEVENT_CONTEXT EventContext);
 
-
 NTSTATUS DokanEventRelease(__in PDEVICE_OBJECT DeviceObject);
 
+NTSTATUS
+DokanGlobalEventRelease(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp);
 
+NTSTATUS
+DokanEventStart(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp);
 
-NTSTATUS DokanGlobalEventRelease(__in PDEVICE_OBJECT DeviceObject,
-	__in PIRP Irp);
+NTSTATUS
+DokanEventWrite(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp);

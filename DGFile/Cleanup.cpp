@@ -143,8 +143,6 @@ NTSTATUS
 	return status;
 }
 
-
-
 VOID DokanCompleteCleanup(__in PIRP_ENTRY IrpEntry,
 	__in PEVENT_INFORMATION EventInfo) {
 	PIRP irp;

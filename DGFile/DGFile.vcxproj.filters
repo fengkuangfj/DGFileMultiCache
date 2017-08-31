@@ -141,6 +141,21 @@
     <ClCompile Include="Exception.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Function.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="OpLock.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Vpb.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Volume.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Unc.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DGFile.h">
@@ -258,6 +273,21 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Exception.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Function.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="OpLock.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Vpb.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Volume.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Unc.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

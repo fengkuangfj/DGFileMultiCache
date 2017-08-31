@@ -17,7 +17,13 @@ SOURCES=Stdafx.cpp \
 		Vcb.cpp \
 		Fcb.cpp \
 		Ccb.cpp \
+		Unc.cpp \
 		Device.cpp \
+		Vpb.cpp \
+		Volume.cpp \
+		Mount.cpp \
+		OpLock.cpp \
+		Function.cpp \
         Cleanup.cpp \
         Close.cpp \
         Create.cpp \

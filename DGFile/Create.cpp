@@ -26,7 +26,6 @@ with this program. If not, see <http://www.gnu.org/licenses/>.
 // #pragma alloc_text(PAGE, DokanDispatchCreate)
 // #endif
 
-
 // Creates a buffer from ExAllocatePool() containing
 // the parent dir of file/dir pointed to by fileName.
 // the buffer IS null terminated
@@ -42,129 +41,6 @@ with this program. If not, see <http://www.gnu.org/licenses/>.
 // if there is no parent, then it return STATUS_ACCESS_DENIED
 // if ExAllocatePool() fails, then it returns STATUS_INSUFFICIENT_RESOURCES
 // otherwise returns STATUS_SUCCESS
-
-NTSTATUS DokanGetParentDir(__in const WCHAR *fileName, __out WCHAR **parentDir,
-	__out ULONG *parentDirLength) {
-	// first check if there is a parent
-
-	LONG len = (LONG)wcslen(fileName);
-
-	LONG i;
-
-	BOOLEAN trailingSlash;
-
-	*parentDir = NULL;
-	*parentDirLength = 0;
-
-	if (len < 1) {
-		return STATUS_INVALID_PARAMETER;
-	}
-
-	if (!wcscmp(fileName, L"\\"))
-		return STATUS_ACCESS_DENIED;
-
-	trailingSlash = fileName[len - 1] == '\\';
-
-	*parentDir = (WCHAR *)ExAllocatePool((len + 1) * sizeof(WCHAR));
-
-	if (!*parentDir)
-		return STATUS_INSUFFICIENT_RESOURCES;
-
-	wcscpy(*parentDir, fileName);
-
-	for (i = len - 1; i >= 0; i--) {
-		if ((*parentDir)[i] == '\\') {
-			if (i == len - 1 && trailingSlash) {
-				continue;
-			}
-			(*parentDir)[i] = 0;
-			break;
-		}
-	}
-
-	if (i <= 0) {
-		i = 1;
-		(*parentDir)[0] = '\\';
-		(*parentDir)[1] = 0;
-	}
-
-	*parentDirLength = i * sizeof(WCHAR);
-	if (trailingSlash && i > 1) {
-		(*parentDir)[i] = '\\';
-		(*parentDir)[i + 1] = 0;
-		*parentDirLength += sizeof(WCHAR);
-	}
-
-	return STATUS_SUCCESS;
-}
-
-LONG DokanUnicodeStringChar(__in PUNICODE_STRING UnicodeString,
-	__in WCHAR Char) {
-	ULONG i = 0;
-	for (; i < UnicodeString->Length / sizeof(WCHAR); ++i) {
-		if (UnicodeString->Buffer[i] == Char) {
-			return i;
-		}
-	}
-	return -1;
-}
-
-VOID SetFileObjectForVCB(__in PFILE_OBJECT FileObject, __in PDokanVCB Vcb) {
-	FileObject->SectionObjectPointer = &Vcb->SectionObjectPointers;
-	FileObject->FsContext = &Vcb->VolumeFileHeader;
-}
-
-NTSTATUS
-DokanCheckShareAccess(__in PFILE_OBJECT FileObject, __in PDokanFCB FcbOrDcb,
-	__in ACCESS_MASK DesiredAccess, __in ULONG ShareAccess)
-
-	/*++
-	Routine Description:
-	This routine checks conditions that may result in a sharing violation.
-	Arguments:
-	FileObject - Pointer to the file object of the current open request.
-	FcbOrDcb - Supplies a pointer to the Fcb/Dcb.
-	DesiredAccess - Desired access of current open request.
-	ShareAccess - Shared access requested by current open request.
-	Return Value:
-	If the accessor has access to the file, STATUS_SUCCESS is returned.
-	Otherwise, STATUS_SHARING_VIOLATION is returned.
-
-	--*/
-
-{
-	NTSTATUS status;
-	PAGED_CODE();
-
-#if (NTDDI_VERSION >= NTDDI_VISTA)
-	//
-	//  Do an extra test for writeable user sections if the user did not allow
-	//  write sharing - this is neccessary since a section may exist with no
-	//  handles
-	//  open to the file its based against.
-	//
-	if ((FcbOrDcb->Identifier.Type == FCB) &&
-		!FlagOn(ShareAccess, FILE_SHARE_WRITE) &&
-		FlagOn(DesiredAccess, FILE_EXECUTE | FILE_READ_DATA | FILE_WRITE_DATA |
-			FILE_APPEND_DATA | DELETE | MAXIMUM_ALLOWED) &&
-		MmDoesFileHaveUserWritableReferences(&FcbOrDcb->SectionObjectPointers)) {
-
-		DDbgPrint("  DokanCheckShareAccess FCB has no write shared access\n");
-		return STATUS_SHARING_VIOLATION;
-	}
-#endif
-
-	//
-	//  Check if the Fcb has the proper share access.
-	//
-	//  Pass FALSE for update.  We will update it later.
-	ExAcquireResourceExclusiveLite(&FcbOrDcb->Resource, TRUE);
-	status = IoCheckShareAccess(DesiredAccess, ShareAccess, FileObject,
-		&FcbOrDcb->ShareAccess, FALSE);
-	ExReleaseResourceLite(&FcbOrDcb->Resource);
-
-	return status;
-}
 
 NTSTATUS
 DokanDispatchCreate(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp)

@@ -388,7 +388,6 @@ typedef struct _DOKAN_LINK_INFORMATION {
 	WCHAR FileName[1];
 } DOKAN_LINK_INFORMATION, *PDOKAN_LINK_INFORMATION;
 
-
 //
 // FSD_IDENTIFIER_TYPE
 //
@@ -418,7 +417,6 @@ typedef struct _IRP_LIST {
 	KSPIN_LOCK ListLock;
 } IRP_LIST, *PIRP_LIST;
 
-
 typedef struct _DOKAN_GLOBAL {
 	FSD_IDENTIFIER Identifier;
 	ERESOURCE Resource;
@@ -431,7 +429,6 @@ typedef struct _DOKAN_GLOBAL {
 	IRP_LIST NotifyService;
 	LIST_ENTRY MountPointList;
 } DOKAN_GLOBAL, *PDOKAN_GLOBAL;
-
 
 // make sure Identifier is the top of struct
 typedef struct _DokanDiskControlBlock {
@@ -519,7 +516,6 @@ typedef struct _DokanVolumeControlBlock {
 
 } DokanVCB, *PDokanVCB;
 
-
 typedef struct _DokanFileControlBlock {
 	FSD_IDENTIFIER Identifier;
 
@@ -557,7 +553,6 @@ typedef struct _DokanFileControlBlock {
 	// uint32 OpenHandleCount;
 } DokanFCB, *PDokanFCB;
 
-
 typedef struct _DokanContextControlBlock {
 	FSD_IDENTIFIER Identifier;
 	ERESOURCE Resource;
@@ -575,7 +570,6 @@ typedef struct _DokanContextControlBlock {
 	ULONG MountId;
 } DokanCCB, *PDokanCCB;
 
-
 typedef struct _DOKAN_CONTROL {
 	ULONG Type;            // File System Type
 	WCHAR MountPoint[260]; // Mount Point
@@ -588,7 +582,6 @@ typedef struct _MOUNT_ENTRY {
 	LIST_ENTRY ListEntry;
 	DOKAN_CONTROL MountControl;
 } MOUNT_ENTRY, *PMOUNT_ENTRY;
-
 
 // IRP list which has pending status
 // this structure is also used to store event notification IRP

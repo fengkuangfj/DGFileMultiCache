@@ -63,3 +63,30 @@ DokanFreeCCB(__in PDokanCCB ccb) {
 
 	return STATUS_SUCCESS;
 }
+
+BOOLEAN
+DokanCheckCCB(__in PDokanDCB Dcb, __in_opt PDokanCCB Ccb) {
+	ASSERT(Dcb != NULL);
+	if (GetIdentifierType(Dcb) != DCB) {
+		PrintIdType(Dcb);
+		return FALSE;
+	}
+
+	if (Ccb == NULL || Ccb == 0) {
+		PrintIdType(Dcb);
+		DDbgPrint("   ccb is NULL\n");
+		return FALSE;
+	}
+
+	if (Ccb->MountId != Dcb->MountId) {
+		DDbgPrint("   MountId is different\n");
+		return FALSE;
+	}
+
+	if (!Dcb->Mounted) {
+		DDbgPrint("  Not mounted\n");
+		return FALSE;
+	}
+
+	return TRUE;
+}

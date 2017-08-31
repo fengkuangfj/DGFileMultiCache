@@ -10,4 +10,3 @@ VOID DokanCompleteQueryVolumeInformation(__in PIRP_ENTRY IrpEntry,
 NTSTATUS
 DokanDispatchQueryVolumeInformation(__in PDEVICE_OBJECT DeviceObject,
 	__in PIRP Irp);
-

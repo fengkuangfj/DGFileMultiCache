@@ -196,4 +196,3 @@ VOID DokanCompleteQuerySecurity(__in PIRP_ENTRY IrpEntry,
 
 	DDbgPrint("<== DokanCompleteQuerySecurity\n");
 }
-

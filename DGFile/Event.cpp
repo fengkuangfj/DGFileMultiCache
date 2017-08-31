@@ -22,46 +22,6 @@ with this program. If not, see <http://www.gnu.org/licenses/>.
 #include "Stdafx.h"
 #include "Event.h"
 
-
-VOID DokanOplockComplete(IN PVOID Context, IN PIRP Irp)
-/*++
-Routine Description:
-This routine is called by the oplock package when an oplock break has
-completed, allowing an Irp to resume execution.  If the status in
-the Irp is STATUS_SUCCESS, then we queue the Irp to the Fsp queue.
-Otherwise we complete the Irp with the status in the Irp.
-Arguments:
-Context - Pointer to the EventContext to be queued to the Fsp
-Irp - I/O Request Packet.
-Return Value:
-None.
---*/
-{
-	PIO_STACK_LOCATION irpSp;
-
-	DDbgPrint("==> DokanOplockComplete\n");
-	PAGED_CODE();
-
-	irpSp = IoGetCurrentIrpStackLocation(Irp);
-
-	//
-	//  Check on the return value in the Irp.
-	//
-	if (Irp->IoStatus.Status == STATUS_SUCCESS) {
-		DokanRegisterPendingIrp(irpSp->DeviceObject, Irp, (PEVENT_CONTEXT)Context,
-			0);
-	}
-	else {
-		DokanCompleteIrpRequest(Irp, Irp->IoStatus.Status, 0);
-	}
-
-	DDbgPrint("<== DokanOplockComplete\n");
-
-	return;
-}
-
-
-
 // start event dispatching
 NTSTATUS
 DokanEventStart(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp) {
@@ -350,9 +310,6 @@ DokanEventWrite(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp) {
 	return STATUS_SUCCESS;
 }
 
-
-
-
 NTSTATUS DokanEventRelease(__in PDEVICE_OBJECT DeviceObject) {
 	PDokanDCB dcb;
 	PDokanVCB vcb;
@@ -471,4 +428,59 @@ NTSTATUS DokanGlobalEventRelease(__in PDEVICE_OBJECT DeviceObject,
 	}
 
 	return DokanEventRelease(mountEntry->MountControl.DeviceObject);
+}
+
+VOID SetCommonEventContext(__in PDokanDCB Dcb, __in PEVENT_CONTEXT EventContext,
+	__in PIRP Irp, __in_opt PDokanCCB Ccb) {
+	PIO_STACK_LOCATION irpSp;
+
+	irpSp = IoGetCurrentIrpStackLocation(Irp);
+
+	EventContext->MountId = Dcb->MountId;
+	EventContext->MajorFunction = irpSp->MajorFunction;
+	EventContext->MinorFunction = irpSp->MinorFunction;
+	EventContext->Flags = irpSp->Flags;
+
+	if (Ccb) {
+		EventContext->FileFlags = Ccb->Flags;
+	}
+
+	EventContext->ProcessId = IoGetRequestorProcessId(Irp);
+}
+
+PEVENT_CONTEXT
+AllocateEventContextRaw(__in ULONG EventContextLength) {
+	ULONG driverContextLength;
+	PDRIVER_EVENT_CONTEXT driverEventContext;
+	PEVENT_CONTEXT eventContext;
+
+	driverContextLength =
+		EventContextLength - sizeof(EVENT_CONTEXT) + sizeof(DRIVER_EVENT_CONTEXT);
+	driverEventContext = (PDRIVER_EVENT_CONTEXT)ExAllocatePool(driverContextLength);
+
+	if (driverEventContext == NULL) {
+		return NULL;
+	}
+
+	RtlZeroMemory(driverEventContext, driverContextLength);
+	InitializeListHead(&driverEventContext->ListEntry);
+
+	eventContext = &driverEventContext->EventContext;
+	eventContext->Length = EventContextLength;
+
+	return eventContext;
+}
+
+PEVENT_CONTEXT
+AllocateEventContext(__in PDokanDCB Dcb, __in PIRP Irp,
+	__in ULONG EventContextLength, __in_opt PDokanCCB Ccb) {
+	PEVENT_CONTEXT eventContext;
+	eventContext = AllocateEventContextRaw(EventContextLength);
+	if (eventContext == NULL) {
+		return NULL;
+	}
+	SetCommonEventContext(Dcb, eventContext, Irp, Ccb);
+	eventContext->SerialNumber = InterlockedIncrement((LONG *)&Dcb->SerialNumber);
+
+	return eventContext;
 }

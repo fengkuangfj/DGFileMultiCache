@@ -3,8 +3,6 @@
 
 #define DEVICE_CONTROL_TAG 'OCED' // DECO
 
-
-
 VOID PrintUnknownDeviceIoctlCode(__in ULONG IoctlCode);
 
 NTSTATUS
@@ -17,4 +15,3 @@ DiskDeviceControl(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp);
 
 NTSTATUS
 DokanDispatchDeviceControl(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp);
-

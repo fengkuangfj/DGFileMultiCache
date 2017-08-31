@@ -3,10 +3,6 @@
 
 #define TIMEOUT_TAG 'EMIT' // TIME
 
-
-
-VOID DokanUnmount(__in PDokanDCB Dcb);
-
 VOID DokanCheckKeepAlive(__in PDokanDCB Dcb);
 
 NTSTATUS
@@ -15,7 +11,6 @@ ReleaseTimeoutPendingIrp(__in PDokanDCB Dcb);
 NTSTATUS
 DokanResetPendingIrpTimeout(__in PDEVICE_OBJECT DeviceObject, __in PIRP Irp);
 
-//KSTART_ROUTINE DokanTimeoutThread;
 VOID DokanTimeoutThread(PDokanDCB Dcb);
 
 NTSTATUS

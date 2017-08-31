@@ -121,12 +121,14 @@
     <ClCompile Include="FileName.cpp" />
     <ClCompile Include="FileSystemControl.cpp" />
     <ClCompile Include="FlushBuffers.cpp" />
+    <ClCompile Include="Function.cpp" />
     <ClCompile Include="Irp.cpp" />
     <ClCompile Include="KrnlStr.cpp" />
     <ClCompile Include="LockControl.cpp" />
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="Mount.cpp" />
     <ClCompile Include="Notification.cpp" />
+    <ClCompile Include="OpLock.cpp" />
     <ClCompile Include="Pnp.cpp" />
     <ClCompile Include="Public.cpp" />
     <ClCompile Include="QueryInformation.cpp" />
@@ -139,7 +141,10 @@
     <ClCompile Include="Shutdown.cpp" />
     <ClCompile Include="Stdafx.cpp" />
     <ClCompile Include="Timeout.cpp" />
+    <ClCompile Include="Unc.cpp" />
     <ClCompile Include="Vcb.cpp" />
+    <ClCompile Include="Volume.cpp" />
+    <ClCompile Include="Vpb.cpp" />
     <ClCompile Include="Write.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -161,12 +166,14 @@
     <ClInclude Include="FileName.h" />
     <ClInclude Include="FileSystemControl.h" />
     <ClInclude Include="FlushBuffers.h" />
+    <ClInclude Include="Function.h" />
     <ClInclude Include="Irp.h" />
     <ClInclude Include="KrnlStr.h" />
     <ClInclude Include="LockControl.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="Mount.h" />
     <ClInclude Include="Notification.h" />
+    <ClInclude Include="OpLock.h" />
     <ClInclude Include="Pnp.h" />
     <ClInclude Include="Public.h" />
     <ClInclude Include="Struct.h" />
@@ -180,7 +187,10 @@
     <ClInclude Include="Shutdown.h" />
     <ClInclude Include="Stdafx.h" />
     <ClInclude Include="Timeout.h" />
+    <ClInclude Include="Unc.h" />
     <ClInclude Include="Vcb.h" />
+    <ClInclude Include="Volume.h" />
+    <ClInclude Include="Vpb.h" />
     <ClInclude Include="Write.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
